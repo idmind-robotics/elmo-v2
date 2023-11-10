@@ -22,7 +22,10 @@ def scan_robots(cb, models=[]):
                 interfaces = netifaces.interfaces()
                 allips = []
                 for i in interfaces:
-                    allips.append(netifaces.ifaddresses(i)[netifaces.AF_INET][0]["addr"])
+                    try:
+                        allips.append(netifaces.ifaddresses(i)[netifaces.AF_INET][0]["addr"])
+                    except:
+                        pass
                 msg = b'ruarobot'
                 for ip in allips:
                     if "127.0.0" in ip:
