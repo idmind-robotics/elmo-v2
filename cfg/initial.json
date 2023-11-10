@@ -1,0 +1,15 @@
+{
+    "robot_name": "Elmo V2 OG",
+    "speakers_volume": 70,
+    "pan_pid_p": 150,
+    "pan_pid_d": 100,
+    "tilt_pid_p": 140,
+    "tilt_pid_d": 100,
+    "onboard_image": "images/normal.png",
+    "server_http_port": 8000,
+    "server_udp_port": 5000,
+    "server_api_port": 8001,
+    "behaviour_look_around": true,
+    "behaviour_blush": true,
+    "behaviour_change_mode": true
+}

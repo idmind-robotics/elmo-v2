@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="res">
+    <file>icons/control.png</file>
+    <file>icons/control-pause.png</file>
+    <file>icon.ico</file>
+  </qresource>
+</RCC>

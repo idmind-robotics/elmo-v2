@@ -1,0 +1,87 @@
+body {
+    font-family: Helvetica, sans-serif;
+    background-color: black;
+    color: white;
+    overflow: hidden;
+    cursor: none;
+}
+
+#div-console {
+    color: black;
+    background-color: white;
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    padding-left: 2rem;
+}
+
+#div-main {
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+
+#img-eyes {
+    height: 100%;
+}
+
+#p-text {
+    color: #C4E5EE;
+    font-size: 5rem;
+    font-weight: bold;
+    text-align: center;
+}
+
+#video-bg {
+
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#video {
+    /* center video */
+
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+
+}
+
+#menu {
+    display: flex;
+
+}
+
+#menu >div {
+    padding: 1rem;
+    background-color: white;
+    border-radius: 4px;
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+
+
+#menu img {
+    height: 40vh;
+    border-radius: 4px;
+}
+
+#menu img:active {
+    opacity: 0.5;
+
+}
+
