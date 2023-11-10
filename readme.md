@@ -1,5 +1,9 @@
 # Elmo V2
 
+
+![alt text](media/cute_elmo_v2.jpg)
+
+
 Develop applications for IDMind's tabletop robot Elmo.
 
 This repository contains the source code installed on the robot. There are significant changes from this version to the first. Read on to know more.
