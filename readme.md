@@ -134,7 +134,19 @@ Reply:
         "message": <OK or error description>
     }
 
-The available operations are:
+
+You choose the operation by passing the appropriate value for `op` and any additional parameters required.
+
+As an example, to disable the `blush` behaviour, which is the robot's reaction to pets, we would send the following body to the `/command` endpoint:
+
+    {
+        "op": "enable_behaviour",
+        "name": "blush",
+        "control": false
+    }
+
+
+The full list of available operations is the following:
 
 ---
 - enable_behaviour
