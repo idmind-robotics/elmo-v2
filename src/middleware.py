@@ -253,7 +253,9 @@ class Battery(DBEntry):
         'ready': False,
         'raw': 0,
         'voltage': 0.0,
-        'i2c_address': 0x48
+        'i2c_address': 0x48,
+        'ad_at_13v': 619.517,
+        'ad_at_16v': 765.021,
     }
 
 

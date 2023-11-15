@@ -13,6 +13,7 @@ This node reads the battery voltage and publishes it to the middleware.
 import io
 import fcntl
 import time
+import numpy as np
 
 import middleware as mw
 
@@ -31,6 +32,11 @@ class DriverBattery:
         self.file_handle =  io.open("/dev/i2c-1", "rb", buffering=0)
         fcntl.ioctl(self.file_handle, I2C_SLAVE_COMMAND, self.battery.i2c_address)
         self.node = mw.Node("driver_battery")
+        value_at_13v = self.battery.ad_at_13v
+        value_at_16v = self.battery.ad_at_16v
+        x = [value_at_13v, value_at_16v]
+        y = [130, 160]
+        self.slope, self.bias = np.polyfit(x, y, 1)
     
     def read_ad(self):
         """
@@ -43,7 +49,8 @@ class DriverBattery:
         """
         Convert the AD value to voltage.
         """
-        voltage = (value * 0.20618 + 2.268) / 10.0
+        # voltage = (value * 0.20618 + 2.268) / 10.0
+        voltage = (value * self.slope + self.bias) / 10.0
         return voltage
     
     def run(self):
