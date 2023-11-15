@@ -441,7 +441,8 @@ class Pan(DBEntry):
         "min_angle": -40,
         "min_playtime": 100,
         "max_playtime": 200,
-        "temperature": 0
+        "temperature": 0,
+        "angle_bias": 12.0
     }
 
 
@@ -476,7 +477,8 @@ class Tilt(DBEntry):
         "min_angle": -15,
         "min_playtime": 100,
         "max_playtime": 200,
-        "temperature": 0
+        "temperature": 0,
+        "angle_bias": 2.3
     }
 
 

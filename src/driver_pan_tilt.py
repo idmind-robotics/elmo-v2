@@ -105,6 +105,7 @@ class DriverPanTilt:
                         motion_range_percent = motion_range / max_motion_range
                         playtime = int(self.pan.min_playtime + (self.pan.max_playtime - self.pan.min_playtime) * motion_range_percent)
                         # self.node.loginfo("setting pan angle to %s with playtime %s" % (angle, playtime))
+                        angle += self.pan.angle_bias
                         self.servo_pan.set_servo_angle(angle, playtime, 0)
                         time.sleep(0.2)
                         # self.node.loginfo("pan angle set")
@@ -118,13 +119,14 @@ class DriverPanTilt:
                         motion_range_percent = motion_range / max_motion_range
                         playtime = int(self.tilt.min_playtime + (self.tilt.max_playtime - self.tilt.min_playtime) * motion_range_percent)
                         # self.node.loginfo("setting tilt angle to %s with playtime %s" % (angle, playtime))
+                        angle += self.tilt.angle_bias
                         self.servo_tilt.set_servo_angle(angle, playtime, 0)
                         time.sleep(0.2)
                         # self.node.loginfo("tilt angle set")
                     # update current angles
-                    self.pan.current_angle = self.servo_pan.get_servo_angle()
+                    self.pan.current_angle = self.servo_pan.get_servo_angle() - self.pan.angle_bias
                     time.sleep(0.2)
-                    self.tilt.current_angle = self.servo_tilt.get_servo_angle()
+                    self.tilt.current_angle = self.servo_tilt.get_servo_angle() - self.tilt.angle_bias
                     time.sleep(0.2)
                     # update current temperature
                     self.pan.temperature = self.servo_pan.get_servo_temperature()
