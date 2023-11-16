@@ -398,6 +398,7 @@ class TouchSensors(DBEntry):
         "head_1_raw": 0,
         "head_2_raw": 0,
         "head_3_raw": 0,
+        "sensitivity": 5,
     }
 
     def head_touch(self):

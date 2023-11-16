@@ -26,7 +26,6 @@ import middleware as mw
 
 
 WINDOW_SIZE = 100
-SENSITIVITY = 5
 
 
 class TouchCalibrator:
@@ -86,16 +85,17 @@ class TouchCalibrator:
                 self.windows["head_2"] = self.windows["head_2"][-WINDOW_SIZE:]
                 self.windows["head_3"] = self.windows["head_3"][-WINDOW_SIZE:]
                 # calculate bounds
+                sensitivity = self.touch_sensors.sensitivity
                 chest_mean = np.mean(self.windows["chest"])
-                chest_upper, chest_lower = chest_mean + SENSITIVITY, chest_mean - SENSITIVITY
+                chest_upper, chest_lower = chest_mean + sensitivity, chest_mean - sensitivity
                 head_0_mean = np.mean(self.windows["head_0"])
-                head_0_upper, head_0_lower = head_0_mean + SENSITIVITY, head_0_mean - SENSITIVITY
+                head_0_upper, head_0_lower = head_0_mean + sensitivity, head_0_mean - sensitivity
                 head_1_mean = np.mean(self.windows["head_1"])
-                head_1_upper, head_1_lower = head_1_mean + SENSITIVITY, head_1_mean - SENSITIVITY
+                head_1_upper, head_1_lower = head_1_mean + sensitivity, head_1_mean - sensitivity
                 head_2_mean = np.mean(self.windows["head_2"])
-                head_2_upper, head_2_lower = head_2_mean + SENSITIVITY, head_2_mean - SENSITIVITY
+                head_2_upper, head_2_lower = head_2_mean + sensitivity, head_2_mean - sensitivity
                 head_3_mean = np.mean(self.windows["head_3"])
-                head_3_upper, head_3_lower = head_3_mean + SENSITIVITY, head_3_mean - SENSITIVITY
+                head_3_upper, head_3_lower = head_3_mean + sensitivity, head_3_mean - sensitivity
                 # check if latest values are below lower bounds
                 chest_last_3 = self.windows["chest"][-3:]
                 head_0_last_3 = self.windows["head_0"][-3:]

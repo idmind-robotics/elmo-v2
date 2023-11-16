@@ -9,6 +9,7 @@
     "tilt_angle_bias": 2.3,
     "battery_ad_at_13v": 619.517,
     "battery_ad_at_16v": 765.021,
+    "touch_sensitivity": 5,
     "onboard_image": "images/normal.png",
     "server_http_port": 8000,
     "server_udp_port": 5000,
