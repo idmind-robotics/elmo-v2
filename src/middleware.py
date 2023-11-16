@@ -541,9 +541,17 @@ class Server(DBEntry):
         "static_path": "static",
     }
 
+    # def wait_for_ready(self):
+    #     while not self.ready:
+    #         time.sleep(0.1)
     def wait_for_ready(self):
-        while not self.ready:
-            time.sleep(0.1)
+        while True:
+            try:
+                requests.get("http://elmo:8000/")
+                break
+            except Exception:
+                time.sleep(0.5)
+
 
     def url_for_image(self, name):
         return "http://elmo:8000/images/" + name
