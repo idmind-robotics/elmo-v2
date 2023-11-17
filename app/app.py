@@ -379,7 +379,7 @@ class Window(QMainWindow, Ui_MainWindow):
             # print(self.client.__dict__)
             self.client.update_status()
             try:
-                self.battery.setText(f'Battery: %.2f V' % self.client.battery)
+                self.battery.setText(f'Battery: %.2f V (%d%%)' % (self.client.battery, self.client.battery_percentage))
                 self.motors_pan.setRange(self.client.pan_min, self.client.pan_max)
                 self.motors_pan_min.setNum(self.client.pan_min)
                 self.motors_pan_max.setNum(self.client.pan_max)

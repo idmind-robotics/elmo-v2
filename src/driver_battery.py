@@ -19,6 +19,17 @@ import middleware as mw
 
 
 I2C_SLAVE_COMMAND=0x0703
+THRESHOLD = 14.0
+
+
+def battery_percentage(voltage, a=30.955, b=-412.661, c=21.604, d=-0.935):
+    x_linear = a * voltage + b
+    x_exponential = c * np.exp(-d * (voltage - THRESHOLD))
+    if voltage <= THRESHOLD:
+        result = x_exponential
+    else:
+        result = x_linear
+    return result
 
 
 class DriverBattery:
@@ -37,6 +48,7 @@ class DriverBattery:
         x = [value_at_13v, value_at_16v]
         y = [130, 160]
         self.slope, self.bias = np.polyfit(x, y, 1)
+        self.voltage_buffer = []
     
     def read_ad(self):
         """
@@ -63,7 +75,13 @@ class DriverBattery:
                 time.sleep(0.1)
                 raw = self.read_ad()
                 self.battery.raw = raw
-                self.battery.voltage = self.ad_to_voltage(raw)
+                voltage = self.ad_to_voltage(raw)
+                self.battery.voltage = voltage
+                self.voltage_buffer.append(voltage)
+                if len(self.voltage_buffer) > 100:
+                    self.voltage_buffer.pop(0)
+                    m = np.mean(self.voltage_buffer)
+                    self.battery.percentage = battery_percentage(m)
         except KeyboardInterrupt:
             pass
         finally:

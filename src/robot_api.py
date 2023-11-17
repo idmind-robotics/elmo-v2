@@ -39,6 +39,7 @@ class Robot:
 
     def __init__(self):
         self.battery = self.mw_battery.voltage
+        self.battery_percentage = self.mw_battery.percentage
         self.pan = self.mw_pan.current_angle
         self.tilt = self.mw_tilt.current_angle
         self.pan_min = self.mw_pan.min_angle
@@ -67,6 +68,7 @@ class Robot:
 
     def update(self):
         self.battery = self.mw_battery.voltage
+        self.battery_percentage = self.mw_battery.percentage
         self.pan = self.mw_pan.current_angle
         self.tilt = self.mw_tilt.current_angle
         self.pan_min = self.mw_pan.min_angle
