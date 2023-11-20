@@ -29,6 +29,7 @@ def battery_percentage(voltage, a=30.955, b=-412.661, c=21.604, d=-0.935):
         result = x_exponential
     else:
         result = x_linear
+    result = min(100.0, max(0.0, result))
     return result
 
 

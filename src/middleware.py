@@ -614,7 +614,8 @@ class Power(DBEntry):
     fields = {
         "reboot": False,
         "shutdown": False,
-        "gpio_shutdown": True
+        "gpio_shutdown": True,
+        "battery_shutdown": True,
     }
 
 
