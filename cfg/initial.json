@@ -1,5 +1,5 @@
 {
-    "robot_name": "Elmo V2 OG",
+    "robot_name": "IDM-ELMO-OG",
     "speakers_volume": 70,
     "pan_pid_p": 150,
     "pan_pid_d": 100,
