@@ -3,12 +3,13 @@
 sudo apt update
 sudo apt upgrade -y
 
-# Redis
-curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
-sudo apt-get update
-sudo apt install redis -y
-pip install redis
+# Redis -  In this Raspberry, REDIS must be compiled from source due to ARM architecture
+#curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
+#echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
+#sudo apt-get update
+#sudo apt install redis -y
+#pip install redis
+
 
 # Neopixel
 sudo apt install python-pip -y
