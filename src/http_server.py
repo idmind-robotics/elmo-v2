@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+
 
 
 """
@@ -25,18 +25,14 @@ import logging
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
-
 import middleware as mw
-
 
 app = Flask(__name__, static_url_path='')
 CORS(app)
 
-
 server = mw.Server()
 onboard = mw.Onboard()
 node = mw.Node("http_server")
-
 
 @app.route("/")
 def index():
@@ -61,7 +57,7 @@ def onboard_handle():
         if "url" in request_data:
             onboard.url = request_data["url"]
         if "video" in request_data:
-            onboard.video = request_data["video"]        
+            onboard.video = request_data["video"]
         return jsonify({
             "image": onboard.image,
             "text": onboard.text,
@@ -83,12 +79,15 @@ def onboard_log():
     if "info" in request.json:
         log = "Onboard " + request.json["info"]
         node.loginfo(log)
+        onboard.log = log
     if "warn" in request.json:
         log = "Onboard " + request.json["warn"]
         node.logwarn(log)
+        onboard.log = log
     if "error" in request.json:
         log = "Onboard " + request.json["error"]
         node.logerror(log)
+        onboard.log = log
     return jsonify({})
 
 

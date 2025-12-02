@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+
 
 
 """
@@ -9,7 +9,7 @@ This node manages the power.
 
 Control it by setting the reboot or shutdown flags of the middleware.Power class.
 
-Also reacts to the GPIO shutdown event and battery at 0%.
+Also reacts to the GPIO shutdown event.
 
 """
 
@@ -29,7 +29,6 @@ class DriverPower:
         """
         self.power = mw.Power()
         self.gpio = mw.GPIO()
-        self.battery = mw.Battery()
         self.node = mw.Node("driver_power")
     
     def reboot(self):
@@ -57,10 +56,6 @@ class DriverPower:
                     break
                 # GPIO shutdown event
                 if self.power.gpio_shutdown and self.gpio.robot_shutdown:
-                    self.shutdown()
-                    break
-                # battery at 0%
-                if self.power.battery_shutdown and self.battery.percentage <= 0:
                     self.shutdown()
                     break
         except KeyboardInterrupt:

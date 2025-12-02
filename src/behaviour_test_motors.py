@@ -5,7 +5,7 @@
 
 Behaviour node.
 
-While enabled, the behaviour makes the head look around, randomly.
+While enabled, the behaviour makes the head look around, systematically.
 
 """
 
@@ -15,18 +15,28 @@ import middleware as mw
 
 
 MAX_RANGE = 30.0
-MIN_SLEEP = 2.0
-MAX_SLEEP = 4.0
+SLEEP = 3.0
+TILT_MIN = -15.0
+TILT_MAX = 15.0
+PAN_MIN = -40.0
+PAN_MAX = 40.0
+ANGLES = [
+    [0.0, 0.0],
+    [PAN_MIN, TILT_MIN],
+    [PAN_MIN, TILT_MAX],
+    [PAN_MAX, TILT_MIN],
+    [PAN_MAX, TILT_MAX],
+]
 
 
-class BehaviourLookAround:
+class BehaviourTestMotors:
 
     def __init__(self):
         """
         Connect to middleware.
         Initialize node.
         """
-        self.node = mw.Node("behaviour_look_around")
+        self.node = mw.Node("behaviour_test_motors")
         self.behaviours = mw.Behaviours()
         self.pan = mw.Pan()
         self.tilt = mw.Tilt()
@@ -44,15 +54,18 @@ class BehaviourLookAround:
                     break
             self.node.loginfo("starting behaviour")
             enabled = False
+            next_angle_ref_idx = 0
             while not self.node.is_shutdown():
                 time.sleep(0.1)
-                if self.behaviours.look_around and not enabled:
+                if self.behaviours.test_motors and not enabled:
                     # behaviour was enabled, enable torque
+                    print("enabling torque")
                     enabled = True
                     self.pan.enable = True
                     self.tilt.enable = True
-                if not self.behaviours.look_around and enabled:
+                if not self.behaviours.test_motors and enabled:
                     # behaviour was disabled, disable torque and reset angles
+                    print("disabling torque")
                     enabled = False
                     self.pan.angle = 0.0
                     self.tilt.angle = 0.0
@@ -60,20 +73,18 @@ class BehaviourLookAround:
                     self.pan.enable = False
                     self.tilt.enable = False
                 if enabled and self.pan.enabled and self.tilt.enabled:
-                    # behaviour is enabled, move randomly
-                    current_pan = self.pan.angle
-                    pan_angle = random.uniform(current_pan - MAX_RANGE, current_pan + MAX_RANGE)
-                    pan_angle = max(self.pan.min_angle, min(self.pan.max_angle, pan_angle))
-                    self.pan.angle = pan_angle
-                    current_tilt = self.tilt.angle
-                    tilt_angle = random.uniform(current_tilt - MAX_RANGE, current_tilt + MAX_RANGE)
-                    tilt_angle = max(self.tilt.min_angle, min(self.tilt.max_angle, tilt_angle))
-                    self.tilt.angle = tilt_angle
-                    time.sleep(random.uniform(MIN_SLEEP, MAX_SLEEP))
+                    # behaviour is enabled, move systematically
+                    print("mobializing")
+                    pan, tilt = ANGLES[next_angle_ref_idx]
+                    self.pan.angle = pan
+                    self.tilt.angle = tilt
+                    next_angle_ref_idx = (next_angle_ref_idx + 1) % len(ANGLES)
+                    time.sleep(SLEEP)
+
         finally:
             self.node.shutdown()
 
 
 if __name__ == '__main__':
-    behaviour = BehaviourLookAround()
+    behaviour = BehaviourTestMotors()
     behaviour.run()

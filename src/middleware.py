@@ -1,29 +1,3 @@
-#! /usr/bin/env python
-
-
-"""
-
-Middleware.
-
-This module provides a set of classes to interact with the middleware.
-
-Defines several classes to interact with the underlying redis database.
-
-Classes that extend DBEntry define data that will be stored in the database.
-
-Clients can use these classes to exchange messages between each other.
-
-Additionally, the module defines several tools to manage node processes.
-
-Clients can use the Node class to signal that they are running, and check for shutdown events.
-
-The NodeManager class can be used to list, shutdown or kill all nodes.
-
-When used as a script, the module provides a command line interface to manage nodes.
-
-"""
-
-
 import redis
 import json
 import os
@@ -37,72 +11,38 @@ from PIL import Image
 import threading
 
 
-
 def get_connection():
-    """
-    Get a connection to the redis database.
-    """
     return redis.Redis()
 
-# global connection
+
 connection = get_connection()
 
 
 def set_key(key, value):
-    """
-    Set a key in the redis database.
-    """
     connection.set(key, json.dumps(value))
 
 def get_key(key):
-    """
-    Get a key from the redis database.
-    """
     return json.loads(connection.get(key))
 
 def has_key(key):
-    """
-    Check if a key exists in the redis database.
-    """
     return connection.exists(key) != 0
 
 def has_any_key(prefix):
-    """
-    Check if any key with the given prefix exists in the redis database.
-    """
     return len(connection.keys(prefix + "*")) > 0
 
 def delete_all():
-    """
-    Delete all keys from the redis database.
-    """
     connection.flushall()
 
 def get_all(*prefixes):
-    """
-    Get all keys from the redis database.
-    Optionally, filter by prefix.
-    """
-    for k in sorted(connection.keys()):
+    for k in connection.keys():
         if len(prefixes) == 0 or any([k.decode().startswith(p) for p in prefixes]):
             print(f'{k.decode()}:\t{get_key(k.decode())}')
 
 def has_any(key):
-    """
-    Check if any key with the given prefix exists in the redis database.
-    """
     return len(connection.keys(key)) > 0
 
 
 class Node:
-    """
-    Node class.
-    Initialize this class to signal node is running.
-    Use is_shutdown() to check if node should shutdown.
-    Use shutdown() to signal node is shutting down.
-    Use loginfo(), logwarn() and logerror() to log messages.
-    """
-
     INFO = 0
     WARN = 1
     ERROR = 2
@@ -140,12 +80,6 @@ class Node:
 
 class NodeManager:
 
-    """
-    NodeManager class.
-    Use this class to list, shutdown or kill all nodes.
-    Nodes that hang can be force shutdown.
-    """
-
     def list_nodes(self):
         return [k.decode()[5:] for k in connection.keys("node_*")]
     
@@ -175,14 +109,6 @@ class NodeManager:
 
 
 class DBEntry:
-
-    """
-    DBEntry class.
-    Extend this class to define data that will be stored in the database.
-    The fields attribute defines the data that will be stored.
-    The prefix attribute defines the prefix that will be used to store the data.
-    """
-
     prefix = ''
     fields = {}
     def __init__(self):
@@ -203,10 +129,6 @@ class DBEntry:
 
 
 class Robot(DBEntry):
-    """
-    Database entry.
-    General information about the robot.
-    """
     prefix = "robot"
     fields = {
         "name": "Elmo V2",
@@ -214,24 +136,19 @@ class Robot(DBEntry):
 
 
 class Camera(DBEntry):
-    """
-    Database entry.
-    Camera information.
-    """
     prefix = "camera"
     fields = {
         "url": "http://elmo2:8080/stream.mjpg",
+        "take_picture": False,
+        "taking_picture": False,
+        "error": None,
+        "face_detected": False,
+        "face_x": 0.0,
+        "face_y": 0.0,
     }
 
 
 class Microphone(DBEntry):
-    """
-    Database entry.
-    Microphone information.
-    Set record to True to start recording.
-    Set record to False to stop recording.
-    Check is_recording to see if recording is in progress.
-    """
     prefix = "microphone"
     fields = {
         "is_recording": False,
@@ -240,43 +157,45 @@ class Microphone(DBEntry):
 
 
 class Battery(DBEntry):
-    """
-    Database entry.
-    Battery information.
-    Check ready to see if battery driver is ready.
-    Check raw to see the raw AD value.
-    Check voltage to see the voltage.
-    Driver will connect to the battery at address defined by i2c_address.
-    """
     prefix = "battery"
     fields = {
         'ready': False,
         'raw': 0,
         'voltage': 0.0,
         'i2c_address': 0x48,
-        'ad_at_13v': 619.517,
-        'ad_at_16v': 765.021,
-        'percentage': 100.0
+        'percentage': 100.0,
     }
 
 
 class Leds(DBEntry):
-    """
-    Database entry.
-    LED information.
-    Set colors to a list of 3-element tuples to set the colors.
-    The led matrix has 169 leds, arranged in a 13x13 grid.
-    Set brightness to a value between 0.0 and 1.0 to set the brightness.
-    """
     prefix = "leds"
     fields = {
         'ready': False,
         'number': 169,
         'colors': [[0, 0, 0]] * 169,
-        'brightness': 0.3
+        'brightness': 0.3,
+        'url': None,
     }
 
+    def set_colors(self, colors):
+        # check if colors has the right size
+        if len(colors) != self.number:
+            self.logerror("colors has the wrong size")
+            return
+        # check if colors has the right format
+        if not all([isinstance(c, list) and len(c) == 3 for c in colors]):
+            self.logerror("colors has the wrong format")
+            return
+        # check if colors has the right values
+        if not all([0 <= c[0] <= 255 and 0 <= c[1] <= 255 and 0 <= c[2] <= 255 for c in colors]):
+            self.logerror("colors has the wrong values")
+            return
+        self.colors = colors
+
     def load_from_url(self, url):
+        self.url = url
+        if url is None:
+            return
         # gif
         if ".gif" in url:
             response = requests.get(url)
@@ -296,7 +215,7 @@ class Leds(DBEntry):
                     frames.append(colors)
             except EOFError:
                 final_color = [[0, 0, 0]] * self.number
-                frames.append(final_color)
+#                frames.append(final_color)
             # schedule the publishing of the messages
             time_between_frames = image.info["duration"] / 1000.0
             for i in range(len(frames)):
@@ -306,6 +225,12 @@ class Leds(DBEntry):
                     return update_colors
                 t = threading.Timer(time_between_frames * i, set_colors(frames[i]))
                 t.start()
+            # clear the leds after the gif ends
+            def clear_leds():
+                self.colors = [[0, 0, 0]] * self.number
+                self.url = None
+            t = threading.Timer(time_between_frames * len(frames), clear_leds)
+            t.start()
         else:
             colors = []
             response = requests.get(url)
@@ -320,22 +245,11 @@ class Leds(DBEntry):
     
     def clear(self):
         self.colors = [[0, 0, 0]] * self.number
+        self.url = None
 
 
 
 class GPIO(DBEntry):
-    """
-    Database entry.
-    GPIO information.
-    Set audio_enable to True to enable audio power.
-    Set audio_enable to False to disable audio power.
-    Set monitor_enable to True to enable monitor power.
-    Set monitor_enable to False to disable monitor power.
-    Check audio_enabled to see if audio power is enabled.
-    Check monitor_enabled to see if monitor power is enabled.
-    Check button_pressed to see if the button is pressed.
-    Check robot_shutdown to see if the robot should shutdown.
-    """
     prefix = "gpio"
     fields = {
         'ready': False,
@@ -354,13 +268,6 @@ class GPIO(DBEntry):
 
 
 class Speakers(DBEntry):
-    """
-    Database entry.
-    Speaker information.
-    Set url to a url to play a sound.
-    Set volume to a value between 0 and 100 to set the volume.
-    Check playing to see if a sound is playing.
-    """
     prefix = "speakers"
     fields = {
         "ready": False,
@@ -371,21 +278,6 @@ class Speakers(DBEntry):
 
 
 class TouchSensors(DBEntry):
-    """
-    Database entry.
-    Touch sensor information.
-    Check ready to see if touch sensor driver is ready.
-    Check touch_chest to see if the chest is touched.
-    Check touch_head_0 to see if the head is touched.
-    Check touch_head_1 to see if the head is touched.
-    Check touch_head_2 to see if the head is touched.
-    Check touch_head_3 to see if the head is touched.
-    Check chest_raw to see the raw AD value.
-    Check head_0_raw to see the raw AD value.
-    Check head_1_raw to see the raw AD value.
-    Check head_2_raw to see the raw AD value.
-    Check head_3_raw to see the raw AD value.
-    """
     prefix = "touch_sensors"
     fields = {
         "ready": False,
@@ -399,13 +291,9 @@ class TouchSensors(DBEntry):
         "head_1_raw": 0,
         "head_2_raw": 0,
         "head_3_raw": 0,
-        "sensitivity": 5,
     }
 
     def head_touch(self):
-        """
-        Check if any head sensor is touched.
-        """
         return any((
             self.touch_head_0,
             self.touch_head_1,
@@ -415,19 +303,6 @@ class TouchSensors(DBEntry):
 
 
 class Pan(DBEntry):
-    """
-    Database entry.
-    Pan servo information.
-    Check ready to see if pan driver is ready.
-    Check angle to see the current angle.
-    Set angle to a value between -40 and 40 to set the angle.
-    Set enable to True to enable torque.
-    Set enable to False to disable torque.
-    Check enabled to see if torque is enabled.
-    Set pid_p to a value between 0 and 255 to set the proportional gain.
-    Set pid_d to a value between 0 and 255 to set the derivative gain.
-    Check temperature to see the temperature.
-    """
     prefix = "pan"
     fields = {
         "ready": False,
@@ -445,25 +320,15 @@ class Pan(DBEntry):
         "min_angle": -40,
         "min_playtime": 100,
         "max_playtime": 200,
+        "temperature_raw": 0,
         "temperature": 0,
-        "angle_bias": 12.0
+        "hot_temperature": 60,
+        "cool_temperature": 40,
+        "angle_bias": 0
     }
 
 
 class Tilt(DBEntry):
-    """
-    Database entry.
-    Tilt servo information.
-    Check ready to see if tilt driver is ready.
-    Check angle to see the current angle.
-    Set angle to a value between -15 and 15 to set the angle.
-    Set enable to True to enable torque.
-    Set enable to False to disable torque.
-    Check enabled to see if torque is enabled.
-    Set pid_p to a value between 0 and 255 to set the proportional gain.
-    Set pid_d to a value between 0 and 255 to set the derivative gain.
-    Check temperature to see the temperature.
-    """
     prefix = "tilt"
     fields = {
         "ready": False,
@@ -481,22 +346,15 @@ class Tilt(DBEntry):
         "min_angle": -15,
         "min_playtime": 100,
         "max_playtime": 200,
+        "temperature_raw": 0,
         "temperature": 0,
-        "angle_bias": 2.3
+        "hot_temperature": 60,
+        "cool_temperature": 40,
+        "angle_bias": 0
     }
 
 
 class Onboard(DBEntry):
-    """
-    Database entry.
-    Onboard information.
-    Check ready to see if onboard driver is ready.
-    Set image to a url to display an image.
-    Set text to a string to display text.
-    Set url to a url to open a url.
-    Set video to a url to play a video.
-    Check speech to see if speech is being recognized. 
-    """
     prefix = "onboard"
     fields = {
         "ready": False,
@@ -505,34 +363,43 @@ class Onboard(DBEntry):
         "url": None,
         "video": None,
         "speech": None,
+        "log": None,
     }
 
 
 class Speech(DBEntry):
-    """
-    Database entry.
-    Speech information.
-    Check ready to see if speech driver is ready.
-    Set language to a language code to set the language.
-    Set say to a string to say something.
-    Check saying to see what is being said.
-    """
     prefix = "speech"
     fields = {
         "ready": False,
         "language": "en",
+        # "language": "pt",
         "say": None,
         "saying": None,
     }
 
 
+class Conversation(DBEntry):
+    prefix = "conversation"
+    fields = {
+        "ready": False,
+        "context": None,
+        "api_key": None,
+        "max_tokens": 100,
+        "temperature": 0.1,
+        "model": None,
+    }
+
+
+class Akinator(DBEntry):
+    prefix = "akinator"
+    fields = {
+        "running": False,
+        "guessed": False,
+        "error": None
+    }
+
+
 class Server(DBEntry):
-    """
-    Database entry.
-    Server information.
-    Configure the http server port, udp server port and api server port.
-    Configure the path to static resources, served by the http server.
-    """
     prefix = "server"
     fields = {
         "ready": False,
@@ -542,31 +409,34 @@ class Server(DBEntry):
         "static_path": "static",
     }
 
-    # def wait_for_ready(self):
-    #     while not self.ready:
-    #         time.sleep(0.1)
-    def wait_for_ready(self):
-        while True:
-            try:
-                requests.get("http://elmo:8000/")
-                break
-            except Exception:
-                time.sleep(0.5)
-
-
     def url_for_image(self, name):
+        # wait for server to be ready
+        while not self.ready:
+            time.sleep(0.1)
         return "http://elmo:8000/images/" + name
 
     def url_for_sound(self, name):
+        # wait for server to be ready
+        while not self.ready:
+            time.sleep(0.1)        
         return "http://elmo:8000/sounds/" + name
     
     def url_for_icon(self, name):
+        # wait for server to be ready
+        while not self.ready:
+            time.sleep(0.1)
         return "http://elmo:8000/icons/" + name
     
     def url_for_video(self, name):
+        # wait for server to be ready
+        while not self.ready:
+            time.sleep(0.1)
         return "http://elmo:8000/videos/" + name
     
     def url_for_camera(self):
+        # wait for server to be ready
+        while not self.ready:
+            time.sleep(0.1)
         return ""
     
     def get_image_list(self):
@@ -603,39 +473,57 @@ class Server(DBEntry):
 
 
 class Power(DBEntry):
-    """
-    Database entry.
-    Power information.
-    Set reboot to True to reboot the robot.
-    Set shutdown to True to shutdown the robot.
-    Set gpio_shutdown to True to shutdown the robot when the GPIO shutdown pin is activated.
-    """
     prefix = "power"
     fields = {
         "reboot": False,
         "shutdown": False,
-        "gpio_shutdown": True,
-        "battery_shutdown": True,
+        "gpio_shutdown": True
     }
 
 
 class Behaviours(DBEntry):
-    """
-    Database entry.
-    Behaviour information.
-    Set look_around to True to enable look around behaviour.
-    Set blush to True to enable blush behaviour.
-    Set change_mode to True to enable change mode behaviour.
-    """
     prefix = "behaviour"
     fields = {
         "look_around": False,
+        "test_motors": False,
         "blush": True,
-        "change_mode": True,
+        "conversation": False,
+        "photographer": False,
+        "akinator": False,
+        "wifi_connect": False,
     }
 
     def list_behaviours(self):
         return self.fields.keys()
+
+
+class Printer(DBEntry):
+    prefix = "printer"
+    fields = {
+        "wifi": "INSTAX-03222647",
+        "connected": False,
+    }
+
+
+def test1():
+    print("listing nodes")
+    manager = NodeManager()
+    print(manager.list_nodes())
+    print("creating node")
+    node = Node("test")
+    print("node created")
+    print("listing nodes")
+    print(manager.list_nodes())
+    print("is alive?")
+    print(manager.is_alive("test"))
+    print("shutting down")
+    manager.shutdown("test")
+    print("is alive?")
+    print(manager.is_alive("test"))
+    print("force shutting down")
+    manager.force_shutdown("test")
+    print("is alive?")
+    print(manager.is_alive("test"))
 
 
 if __name__ == '__main__':
@@ -645,8 +533,7 @@ if __name__ == '__main__':
         sys.exit(1)
     manager = NodeManager()    
     if sys.argv[1] == "list":
-        node_list = manager.list_nodes()
-        print(json.dumps(sorted(node_list), indent=2))
+        print(json.dumps(sorted(manager.list_nodes()), indent=2))
     elif sys.argv[1] == "killall":
         for name in manager.list_nodes():
             manager.shutdown(name)
@@ -672,6 +559,26 @@ if __name__ == '__main__':
             pass
     elif sys.argv[1] == "reset":
         delete_all()
+    elif sys.argv[1] == "set":
+        if len(sys.argv) != 5:
+            print("usage: python3 middleware.py set <type> <key> <value>")
+            sys.exit(1)
+        if sys.argv[2] == "int":
+            set_key(sys.argv[3], int(sys.argv[4]))
+        elif sys.argv[2] == "float":
+            set_key(sys.argv[3], float(sys.argv[4]))
+        elif sys.argv[2] == "str":
+            set_key(sys.argv[3], sys.argv[4])
+        elif sys.argv[2] == "bool":
+            set_key(sys.argv[3], sys.argv[4] in ("True", "true"))
+        else:
+            print("unknown type")
+            sys.exit(1)
+    elif sys.argv[1] == "get":
+        if len(sys.argv) != 3:
+            print("usage: python3 middleware.py get <key>")
+            sys.exit(1)
+        print(get_key(sys.argv[2]))
     else:
         print(usage)
         sys.exit(1)

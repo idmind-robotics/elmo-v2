@@ -180,6 +180,7 @@ def close():
     Raises:
         SerialException: Error occured while closing serial port
     """
+    global SERPORT
     try:
         SERPORT.close()
     except:
@@ -301,6 +302,7 @@ def scan_servos():
         model = get_model(servo_id)
         if model:
             servos += [(servo_id, model)]
+
     return servos
 
 def get_model(servoid):
@@ -325,11 +327,15 @@ def get_model(servoid):
     data.append(BYTE1)
     send_data(data)
     rxdata = []
-    try:
-        rxdata = SERPORT.read(12)
-        return ord(rxdata[9])&0xFF
-    except:
-        raise HerkulexError("could not communicate with motors")
+    #try:
+    rxdata = SERPORT.read(12)
+    print("RXDATA length:", len(rxdata), "RXDATA:", list(rxdata))  # debugging
+
+    if len(rxdata) < 10:
+        raise HerkulexError("Incomplete response from servo. Check wiring, power, and servo ID")
+    return rxdata[9] & 0xFF
+    #except:
+       # raise HerkulexError("could not communicate with motors")
 
 def status_error(error):
     if error == 0:

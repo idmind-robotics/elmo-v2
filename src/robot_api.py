@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+
 
 
 import time
@@ -269,6 +269,8 @@ def command():
             success, message = robot.reboot()
         elif op == "shutdown":
             success, message = robot.shutdown()
+        elif op == "manual_prompt":
+            robot.mw_onboard.speech = "Can you tell me the capital of spain?"
         else:
             return jsonify({ "success": False, "message": "%s is not a recognized operation" % op })
         return jsonify({ "success": success, "message": message })

@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 
 
 """
@@ -18,7 +17,7 @@ import middleware as mw
 
 LOOP_RATE = 10
 TOUCH_COUNTER_THRESHOLD = 3
-COOLDOWN = 5 * LOOP_RATE
+COOLDOWN = 2 * LOOP_RATE
 
 
 class BehaviourBlush:
@@ -41,6 +40,7 @@ class BehaviourBlush:
         Updates the onboard image, plays a sound and changes the leds.
         """
         self.node.loginfo("blushing")
+        previous_icon_url = self.leds.url
         image_url = self.server.url_for_image("love.png")
         self.onboard.image = image_url
         sound_url = self.server.url_for_sound("love.wav")
@@ -50,8 +50,9 @@ class BehaviourBlush:
         time.sleep(5.0)
         image_url = self.server.url_for_image("normal.png")
         self.onboard.image = image_url
-        icon_url = self.server.url_for_icon("elmo_idm.png")
-        self.leds.load_from_url(icon_url)
+        self.leds.load_from_url(previous_icon_url)
+        # icon_url = self.server.url_for_icon("elmo_idm.png")
+        # self.leds.load_from_url(icon_url)
 
     def run(self):
         """

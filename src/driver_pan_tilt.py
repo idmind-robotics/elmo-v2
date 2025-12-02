@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+
 
 
 """
@@ -18,6 +18,11 @@ import herkulex as hx
 import middleware as mw
 
 
+
+TEMPERATURE_SLOPE = 0.7105
+TEMPERATURE_INTERCEPT = -79.47
+
+
 class DriverPanTilt:
 
     def __init__(self):
@@ -35,7 +40,7 @@ class DriverPanTilt:
         """
         pan_id = self.pan.id
         tilt_id = self.tilt.id
-        hx.connect("/dev/ttyS0", 115200)
+        hx.connect("/dev/serial0", 115200)
         self.node.loginfo("connected to serial port")
         hx.clear_errors()
         time.sleep(1.0)
@@ -129,9 +134,13 @@ class DriverPanTilt:
                     self.tilt.current_angle = self.servo_tilt.get_servo_angle() - self.tilt.angle_bias
                     time.sleep(0.2)
                     # update current temperature
-                    self.pan.temperature = self.servo_pan.get_servo_temperature()
+                    pan_temperature_raw = self.servo_pan.get_servo_temperature()
+                    self.pan.temperature_raw = pan_temperature_raw
+                    self.pan.temperature = TEMPERATURE_SLOPE * pan_temperature_raw + TEMPERATURE_INTERCEPT
                     time.sleep(0.2)
-                    self.tilt.temperature = self.servo_tilt.get_servo_temperature()
+                    tilt_temperature_raw = self.servo_tilt.get_servo_temperature()
+                    self.tilt.temperature_raw = tilt_temperature_raw
+                    self.tilt.temperature = TEMPERATURE_SLOPE * tilt_temperature_raw + TEMPERATURE_INTERCEPT
                     time.sleep(0.2)
                 except IndexError:
                     hx.clear_errors()

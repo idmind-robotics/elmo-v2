@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 
 
 """
@@ -36,7 +35,7 @@ class DriverSpeakers:
         """
         self.speakers.playing = url
         print(f'playing {url}')
-        os.system(f'/usr/bin/curl {url} | /usr/bin/aplay')
+        os.system(f'/usr/bin/curl {url} | /usr/bin/aplay -D plughw:2,0')
         self.speakers.url = None
         self.speakers.playing = None
     

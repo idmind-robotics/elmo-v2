@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 
 
 """
@@ -35,7 +35,7 @@ class DriverSpeech:
         """
         Speak a text.
         """
-        command = '/usr/bin/rm -f /tmp/f.mp3 /tmp/f.wav && /home/idmind/.local/bin/gtts-cli -l %s "%s" --output /tmp/f.mp3 && /usr/bin/ffmpeg -i /tmp/f.mp3 /tmp/f.wav && /usr/bin/aplay /tmp/f.wav && /usr/bin/rm -f /tmp/f.mp3 /tmp/f.wav' % (language, text)
+        command = '/usr/bin/rm -f /tmp/f.mp3 /tmp/f.wav && /home/idmind/.local/bin/gtts-cli -l %s "%s" --output /tmp/f.mp3 && /usr/bin/ffmpeg -i /tmp/f.mp3 /tmp/f.wav && /usr/bin/aplay -D plughw:2,0 /tmp/f.wav && /usr/bin/rm -f /tmp/f.mp3 /tmp/f.wav' % (language, text)
         os.system(command)
         self.speech.saying = ""
         self.speech.say = ""    

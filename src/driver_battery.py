@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 
 
 """
@@ -18,7 +17,9 @@ import numpy as np
 import middleware as mw
 
 
-I2C_SLAVE_COMMAND=0x0703
+I2C_SLAVE_COMMAND = 0x0703
+
+
 THRESHOLD = 14.0
 
 
@@ -29,7 +30,6 @@ def battery_percentage(voltage, a=30.955, b=-412.661, c=21.604, d=-0.935):
         result = x_exponential
     else:
         result = x_linear
-    result = min(100.0, max(0.0, result))
     return result
 
 
@@ -44,11 +44,6 @@ class DriverBattery:
         self.file_handle =  io.open("/dev/i2c-1", "rb", buffering=0)
         fcntl.ioctl(self.file_handle, I2C_SLAVE_COMMAND, self.battery.i2c_address)
         self.node = mw.Node("driver_battery")
-        value_at_13v = self.battery.ad_at_13v
-        value_at_16v = self.battery.ad_at_16v
-        x = [value_at_13v, value_at_16v]
-        y = [130, 160]
-        self.slope, self.bias = np.polyfit(x, y, 1)
         self.voltage_buffer = []
     
     def read_ad(self):
@@ -62,8 +57,7 @@ class DriverBattery:
         """
         Convert the AD value to voltage.
         """
-        # voltage = (value * 0.20618 + 2.268) / 10.0
-        voltage = (value * self.slope + self.bias) / 10.0
+        voltage = (value * 0.20618 + 2.268) / 10.0
         return voltage
     
     def run(self):
