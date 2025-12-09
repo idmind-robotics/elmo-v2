@@ -32,10 +32,10 @@ class DriverGpio:
 
         # --- INPUTS ---
         lgpio.gpio_claim_input(self.chip, self.gpio.button_pin)
-        lgpio.gpio_claim_input(self.chip, self.gpio.shutdown_pin)
+        #lgpio.gpio_claim_input(self.chip, self.gpio.shutdown_pin)
 
         # --- OUTPUTS (start HIGH like original code) ---
-        lgpio.gpio_claim_output(self.chip, self.gpio.stay_enable_pin, 1)
+        #lgpio.gpio_claim_output(self.chip, self.gpio.stay_enable_pin, 1)
         lgpio.gpio_claim_output(self.chip, self.gpio.audio_pin, 1)
         lgpio.gpio_claim_output(self.chip, self.gpio.monitor_pin, 1)
 
@@ -98,12 +98,12 @@ class DriverGpio:
                     self.gpio.button_pressed = False
 
                 # SHUTDOWN PIN
-                if lgpio.gpio_read(self.chip, self.gpio.shutdown_pin):
-                    if not self.gpio.robot_shutdown:
-                        self.node.loginfo("gpio: shutdown signal detected")
-                    self.gpio.robot_shutdown = True
-                else:
-                    self.gpio.robot_shutdown = False
+                #if lgpio.gpio_read(self.chip, self.gpio.shutdown_pin):
+                #    if not self.gpio.robot_shutdown:
+                #        self.node.loginfo("gpio: shutdown signal detected")
+                #    self.gpio.robot_shutdown = True
+                #else:
+                #    self.gpio.robot_shutdown = False
 
         except KeyboardInterrupt:
             pass

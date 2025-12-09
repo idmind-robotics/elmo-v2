@@ -55,9 +55,9 @@ class DriverPower:
                     self.shutdown()
                     break
                 # GPIO shutdown event
-                if self.power.gpio_shutdown and self.gpio.robot_shutdown:
-                    self.shutdown()
-                    break
+                #if self.power.gpio_shutdown and self.gpio.robot_shutdown:
+                #    self.shutdown()
+                #    break
         except KeyboardInterrupt:
             pass
         except Exception as e:

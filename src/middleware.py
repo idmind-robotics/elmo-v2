@@ -254,8 +254,8 @@ class GPIO(DBEntry):
     fields = {
         'ready': False,
         'button_pin': 17,
-        'shutdown_pin': 27,
-        'stay_enable_pin': 4,
+        #'shutdown_pin': 27,
+        #'stay_enable_pin': 4,
         'audio_pin': 22,
         'monitor_pin': 10,
         'audio_enabled': False,
