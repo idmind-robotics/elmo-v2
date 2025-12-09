@@ -5,19 +5,19 @@ export XDG_RUNTIME_DIR=/run/user/1000
 export DISPLAY=0:0
 
 # Wait for UART0 to be ready
-UART_DEVICE="/dev/serial0"  # could be /dev/ttyAMA0 on some models
-echo "Waiting for UART device $UART_DEVICE to be ready..."
+#UART_DEVICE="/dev/serial0"  # could be /dev/ttyAMA0 on some models
+#echo "Waiting for UART device $UART_DEVICE to be ready..."
 
-while [ ! -e "$UART_DEVICE" ]; do
-    echo "$(date): UART device $UART_DEVICE not ready yet. Sleeping 2 seconds..."
-    sleep 2
-done
+#while [ ! -e "$UART_DEVICE" ]; do
+#    echo "$(date): UART device $UART_DEVICE not ready yet. Sleeping 2 seconds..."
+#    sleep 2
+#done
 
-echo "Waiting for Redis..."
-until redis-cli ping >/dev/null 2>&1; do
-    sleep 2
-done
-echo "Redis is ready!"
+#echo "Waiting for Redis..."
+#until redis-cli ping >/dev/null 2>&1; do
+#    sleep 2
+#done
+#echo "Redis is ready!"
 
 # create log folder, if it doesn't exist
 mkdir -p /home/elmo/logs
