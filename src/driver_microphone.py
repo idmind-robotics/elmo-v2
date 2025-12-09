@@ -31,7 +31,7 @@ class DriverMicrophone:
     
     def start_recording_audio(self):
         # start recording audio using arecord
-        os.system("arecord -D hw:2,0 -f S16_LE -c 1 -r 44100 %s/sounds/mic.wav &" % self.server.static_path)
+        os.system("arecord -D pulse -f S16_LE -c 1 -r 44100 %s/sounds/mic.wav &" % self.server.static_path)
         self.microphone.is_recording = True
     
     def stop_recording_audio(self):
