@@ -13,11 +13,11 @@ export DISPLAY=0:0
 #    sleep 2
 #done
 
-#echo "Waiting for Redis..."
-#until redis-cli ping >/dev/null 2>&1; do
-#    sleep 2
-#done
-#echo "Redis is ready!"
+echo "Waiting for Redis..."
+until redis-cli ping >/dev/null 2>&1; do
+    sleep 2
+done
+echo "Redis is ready!"
 
 # create log folder, if it doesn't exist
 mkdir -p /home/elmo/logs
