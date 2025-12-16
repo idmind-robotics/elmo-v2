@@ -10,7 +10,7 @@ import middleware as mw
 
 battery = mw.Battery()
 
-outfile = open('/home/elmo/battery_log.csv', 'w')
+outfile = open('/home/idmind/battery_log.csv', 'w')
 outfile.write('Time, Battery\n')
 outfile.close()
 
@@ -21,6 +21,6 @@ while True:
     now = datetime.datetime.now()
     voltage = battery.voltage
     print('{}, {}'.format(now, voltage))
-    with open('/home/elmo/battery_log.csv', 'a') as outfile:
+    with open('/home/idmind/battery_log.csv', 'a') as outfile:
         outfile.write('{}, {}\n'.format(now, voltage))
     time.sleep(delay)
