@@ -1,16 +1,8 @@
 ## stay enable
-
-in order to set the stay_enable pin (4) to HIGH after boot, add the following lines to /etc/rc.local:
-
-
-gpio -g mode 4 out
-gpio -g write 4 1
-
-
-in order to set the stay_enable pin (4) to LOW after shutdown, add the following lines to /boot/config.txt:
-
+Add the following lines to /boot/firmware/config.txt:
 
 dtoverlay=gpio-poweroff,gpiopin=4,active_low=1
+dtoverlay=gpio-shutdown,gpio_pin=27,active_low=0
 
 ## autostart
 
