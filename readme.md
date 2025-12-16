@@ -4,7 +4,7 @@ This code is a glass release for Elmo. It is an adaptation to allow to run the c
 To run the code manually, please use "pyenv activate py39-elmo" to activate the environment. (The app also needs to be run in python 3.9)
 Below there are some possible failure conditions for the code that is running on Elmo : 
 
- - `WARNING`: The code in the script "driver_gpio.py" is not working correctly. Even though the shutdown signal is sent via GPIO, the raspi does not initiate shutdown, which can cause SD card corruption. If that happens, please take the SD card and you can easily clean the corrupted files in any linux machine
+ - **FIXED** : The code in the script "driver_gpio.py" is not working correctly. Even though the shutdown signal is sent via GPIO, the raspi does not initiate shutdown, which can cause SD card corruption. If that happens, please take the SD card and you can easily clean the corrupted files in any linux machine  - Moved shutdown and poweroff button triggers to raspberry pi boot config files. 
 
  - REDIS, the middleware used, can also be corrupted if the shutdown is not done correctly. It can even block the startup. If that happens run the "redis-check-aof --fix" command with the file appendonly (should be at ~/var/lib/redis/appendonlydir)
 
@@ -14,7 +14,7 @@ Below there are some possible failure conditions for the code that is running on
 
  - REDIS was installed by source, so the installation script for this code doesn't run
 
- - All the sensors and actuators (touch sensors, LED Matrix, Herculex Servos, Speakers and Microphone and Camera) where tested and ran correctly. There is one head sensor that wasn't implemented, but that can easily be done if needed in "driver_touch_sensors.py" and "middleware.py"
+ - All the sensors and actuators (touch sensors, LED Matrix, Herculex Servos, Speakers and Microphone and Camera) were tested and ran correctly. There is one head sensor that wasn't implemented, but that can easily be done if needed in "driver_touch_sensors.py" and "middleware.py"
 
 
 # Elmo V2
