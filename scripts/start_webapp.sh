@@ -3,9 +3,9 @@
 export DISPLAY=:0
 export XDG_RUNTIME_DIR=/run/user/1000
 
-# Wait for PulseAudio and display to exist
-until [ -d /run/user/1000/pulse ] && pactl info &>/dev/null; do
-  echo "Waiting for PulseAudio..."
+# Wait for PipeWire and display to exist
+until pw-cli info core &>/dev/null; do
+  echo "Waiting for PipeWire..."
   sleep 2
 done
 
@@ -14,30 +14,27 @@ until xset q &>/dev/null; do
   sleep 2
 done
 
-# set default microphone to virtual noise cancelled
-/usr/bin/pactl set-default-source alsa_input.usb-GeneralPlus_USB_Audio_Device-00.mono-fallback.echo-cancel
+# set default microphone to virtual noise cancelled using PipeWire native commands
+MICROPHONE_NAME="alsa_input.usb-GeneralPlus_USB_Audio_Device-00.mono-fallback"
 
-# Wait for the virtual microphone to be created
-MICROPHONE="alsa_input.usb-GeneralPlus_USB_Audio_Device-00.mono-fallback.echo-cancel"
-until pactl list sources short | grep -q "$MICROPHONE"; do
-  sleep 1
+# Wait for the microphone to be available and get its node ID
+MICROPHONE_ID=""
+until [ -n "$MICROPHONE_ID" ]; do
+  MICROPHONE_ID=$(pw-dump Node | grep -B5 -A5 "$MICROPHONE_NAME" | grep '"id"' | head -1 | grep -oP ':\s*\K\d+')
+  [ -z "$MICROPHONE_ID" ] && sleep 1
 done
 
-# Adjust microphone volume
-/usr/bin/pactl set-source-volume alsa_input.usb-GeneralPlus_USB_Audio_Device-00.mono-fallback.echo-cancel 40%
+# Set as default source
+pw-cli set-default Audio/Source "$MICROPHONE_ID"
+
+# Set volume to 40% (0.4 in PipeWire)
+pw-cli set_param "$MICROPHONE_ID" Props '{ volume: 0.4 }'
 
 # Wait for the server
 until $(curl --output /dev/null --silent --head --fail http://localhost:8000); do
   sleep 1
 done
 
-
-# Start the webapp
-
-# /usr/bin/chromium --kiosk --app=http://localhost:8000?p=$RANDOM
-# /usr/bin/chromium-browser --use-fake-ui-for-media-stream --kiosk --app=http://localhost:8000?p=$RANDOM
-# /usr/bin/chromium --use-fake-ui-for-media-stream --kiosk --app=http://localhost:8000?p=$RANDOM
-# /usr/bin/chromium http://localhost:8000?p=$RANDOM
 
 # Determine which chromium executable to use
 CHROMIUM_CMD=""

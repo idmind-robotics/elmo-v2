@@ -12,8 +12,9 @@ Stores captured audio to wave file called mic.wav, in the multimedia server's st
 """
 
 
-import os
+import subprocess
 import time
+import os
 
 import middleware as mw
 
@@ -28,15 +29,38 @@ class DriverMicrophone:
         self.node = mw.Node("driver_microphone")
         self.microphone = mw.Microphone()
         self.server = mw.Server()
+        self.recording_process = None
+        # Get microphone target from environment or config, use None for default device
+        self.microphone_target = os.environ.get("MICROPHONE_TARGET")
     
     def start_recording_audio(self):
-        # start recording audio using arecord
-        os.system("arecord -D pulse -f S16_LE -c 1 -r 44100 %s/sounds/mic.wav &" % self.server.static_path)
+        # start recording audio using pw-record (PipeWire native)
+        output_file = f"{self.server.static_path}/sounds/mic.wav"
+        cmd = [
+            "pw-record",
+            "--format=s16",
+            "--channels=1",
+            "--rate=44100",
+            output_file
+        ]
+        # Add target only if specified (uses system default if not)
+        if self.microphone_target:
+            cmd.insert(1, "--target")
+            cmd.insert(2, self.microphone_target)
+        
+        self.recording_process = subprocess.Popen(cmd)
         self.microphone.is_recording = True
     
     def stop_recording_audio(self):
-        # stop recording audio
-        os.system("killall arecord")
+        # stop recording audio #TODO Validate and handle errors, logging
+        if self.recording_process:
+            self.recording_process.terminate()
+            try:
+                self.recording_process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.recording_process.kill()
+                self.recording_process.wait()
+            self.recording_process = None
         self.microphone.is_recording = False
     
     def run(self):
