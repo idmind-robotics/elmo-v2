@@ -1,7 +1,3 @@
-
-
-
-
 import os
 import time
 import cv2
@@ -18,7 +14,6 @@ import middleware as mw
 LOOP_RATE = 10
 
 
-
 class BehaviourWifiConnect:
     def __init__(self):
         self.onboard = mw.Onboard()
@@ -29,14 +24,14 @@ class BehaviourWifiConnect:
         self.node = mw.Node("behaviour_wifi_connect")
         self.look_around_was_enabled = False
         self.conversation_was_enabled = False
-    
+
     def show_stream(self):
         self.look_around_was_enabled = self.behaviours.look_around
         self.behaviours.look_around = False
         self.conversation_was_enabled = self.behaviours.conversation
         time.sleep(2.0)
         self.onboard.image = self.camera.url
-    
+
     def hide_stream(self):
         self.onboard.image = None
         time.sleep(1.0)
@@ -60,24 +55,38 @@ class BehaviourWifiConnect:
         wifi_details = {"S": "", "T": "nopass", "P": "", "H": "false"}  # Defaults
 
         for key, value in matches:
-            wifi_details[key] = value.replace("\\;", ";").replace("\\:", ":")  # Unescaping
+            wifi_details[key] = value.replace("\\;", ";").replace(
+                "\\:", ":"
+            )  # Unescaping
 
         return wifi_details["S"], wifi_details["P"]
-    
+
     def try_connect_to_wifi(self, ssid, password):
         print("Connecting to WiFi network %s. Password: %s" % (ssid, password))
         try:
-            result = subprocess.run(["sudo", "nmcli", "dev", "wifi", "rescan"], capture_output=True, text=True)
+            result = subprocess.run(
+                ["sudo", "nmcli", "dev", "wifi", "rescan"],
+                capture_output=True,
+                text=True,
+            )
             if result.returncode != 0:
                 return False, result.stderr
             time.sleep(5.0)
-            result = subprocess.run(["sudo", "nmcli", "dev", "wifi", "connect", ssid, "password", password], capture_output=True, text=True)
+            result = subprocess.run(
+                ["sudo", "nmcli", "dev", "wifi", "connect", ssid, "password", password],
+                capture_output=True,
+                text=True,
+            )
             if result.returncode != 0:
                 return False, result.stderr
-            result = subprocess.run(["sudo", "nmcli", "-t", "-f", "active,ssid", "dev", "wifi"], capture_output=True, text=True)
+            result = subprocess.run(
+                ["sudo", "nmcli", "-t", "-f", "active,ssid", "dev", "wifi"],
+                capture_output=True,
+                text=True,
+            )
             for line in result.stdout.splitlines():
-                    if line.startswith("yes:"):
-                        return True, line.split(":")[1]
+                if line.startswith("yes:"):
+                    return True, line.split(":")[1]
             return False, "Failed to connect to WiFi network"
         except subprocess.CalledProcessError as e:
             error_message = "Failed to connect to WiFi network: %s" % e
@@ -114,13 +123,15 @@ class BehaviourWifiConnect:
                         if len(qr_codes) == 0:
                             print("No QR codes detected")
                         for qr_code in qr_codes:
-                            decoded = qr_code.data.decode('utf-8')
+                            decoded = qr_code.data.decode("utf-8")
                             print(f"QR Code data: {decoded}")
                             if "WIFI" in decoded:
                                 self.onboard.image = None
                                 self.onboard.text = "Connecting to WiFi network..."
                                 ssid, password = self.parse_wifi_qr(decoded)
-                                success, message = self.try_connect_to_wifi(ssid, password)
+                                success, message = self.try_connect_to_wifi(
+                                    ssid, password
+                                )
                                 if success:
                                     self.onboard.image = None
                                     self.onboard.text = f"Connected to {message}"
@@ -142,6 +153,6 @@ class BehaviourWifiConnect:
             self.node.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     node = BehaviourWifiConnect()
     node.run()

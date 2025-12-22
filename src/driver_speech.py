@@ -1,6 +1,3 @@
-
-
-
 """
 
 Driver node.
@@ -14,7 +11,6 @@ gtts-cli is a command line interface to the Google Text-to-Speech API.
 Internet connection is required.
 
 """
-
 
 import subprocess
 import time
@@ -34,38 +30,46 @@ class DriverSpeech:
         self.node = mw.Node("driver_speech")
         self.temp_dir = tempfile.gettempdir()
         self.playback_process = None
-    
+
     def speak(self, language, text):
         """
         Speak a text.
         """
         mp3_file = os.path.join(self.temp_dir, "speech.mp3")
         wav_file = os.path.join(self.temp_dir, "speech.wav")
-        
+
         try:
             # Generate speech using gtts-cli
-            subprocess.run([
-                "/home/idmind/.local/bin/gtts-cli",
-                "-l", language,
-                text,
-                "--output", mp3_file
-            ], check=True, capture_output=True)
-            
+            subprocess.run(
+                [
+                    "/home/idmind/.local/bin/gtts-cli",
+                    "-l",
+                    language,
+                    text,
+                    "--output",
+                    mp3_file,
+                ],
+                check=True,
+                capture_output=True,
+            )
+
             # Convert MP3 to WAV using ffmpeg
-            subprocess.run([
-                "/usr/bin/ffmpeg",
-                "-i", mp3_file,
-                "-y",  # Overwrite output file
-                wav_file
-            ], check=True, capture_output=True)
-            
+            subprocess.run(
+                [
+                    "/usr/bin/ffmpeg",
+                    "-i",
+                    mp3_file,
+                    "-y",  # Overwrite output file
+                    wav_file,
+                ],
+                check=True,
+                capture_output=True,
+            )
+
             # Play using pw-play (PipeWire native)
-            self.playback_process = subprocess.Popen([
-                "pw-play",
-                wav_file
-            ])
+            self.playback_process = subprocess.Popen(["pw-play", wav_file])
             self.playback_process.wait()
-            
+
         except subprocess.CalledProcessError as e:
             print(f"Error during speech playback: {e}")
         finally:
@@ -75,9 +79,9 @@ class DriverSpeech:
                     os.remove(file)
                 except FileNotFoundError:
                     pass
-        
+
         self.speech.saying = ""
-        self.speech.say = ""    
+        self.speech.say = ""
 
     def run(self):
         """
@@ -96,6 +100,6 @@ class DriverSpeech:
             self.node.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     node = DriverSpeech()
     node.run()

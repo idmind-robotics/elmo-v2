@@ -1,6 +1,3 @@
-
-
-
 import time
 
 import middleware as mw
@@ -29,7 +26,7 @@ class ModeManager:
             MODE_CONVERSATION,
             MODE_PHOTOGRAPHER,
             MODE_AKINATOR,
-            MODE_WIFI_CONNECT
+            MODE_WIFI_CONNECT,
         ]
         self.icons = {
             MODE_IDLE: "elmo_idm.png",
@@ -122,6 +119,6 @@ class ModeManager:
             self.node.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     node = ModeManager()
     node.run()

@@ -1,6 +1,3 @@
-
-
-
 """
 
 Driver node.
@@ -13,7 +10,6 @@ Also reacts to the GPIO shutdown event.
 
 """
 
-
 import os
 import time
 
@@ -21,7 +17,6 @@ import middleware as mw
 
 
 class DriverPower:
-
     def __init__(self):
         """
         Connect to middleware.
@@ -30,7 +25,7 @@ class DriverPower:
         self.power = mw.Power()
         self.gpio = mw.GPIO()
         self.node = mw.Node("driver_power")
-    
+
     def reboot(self):
         self.node.loginfo("Rebooting")
         os.system("sudo /usr/sbin/reboot")

@@ -1,5 +1,3 @@
-
-
 """
 
 Behaviour node.
@@ -8,7 +6,6 @@ When a head touch is detected, the behaviour updates the onboard image,
 plays a sound and changes the leds.
 
 """
-
 
 import time
 
@@ -33,7 +30,7 @@ class BehaviourBlush:
         self.behaviours = mw.Behaviours()
         self.server = mw.Server()
         self.node = mw.Node("behaviour_blush")
-    
+
     def blush(self):
         """
         Blush routine.
@@ -46,7 +43,7 @@ class BehaviourBlush:
         sound_url = self.server.url_for_sound("love.wav")
         self.speakers.url = sound_url
         icon_url = self.server.url_for_icon("heartbeat.gif")
-        self.leds.load_from_url(icon_url) 
+        self.leds.load_from_url(icon_url)
         time.sleep(5.0)
         image_url = self.server.url_for_image("normal.png")
         self.onboard.image = image_url
@@ -77,6 +74,6 @@ class BehaviourBlush:
             self.node.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     node = BehaviourBlush()
     node.run()

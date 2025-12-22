@@ -1,11 +1,8 @@
-
-
 """
 
 Load initial middleware keys and values into redis.
 
 """
-
 
 import json
 import os

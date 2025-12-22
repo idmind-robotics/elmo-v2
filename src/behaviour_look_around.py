@@ -1,6 +1,3 @@
-
-
-
 """
 
 Behaviour node.
@@ -20,7 +17,6 @@ MAX_SLEEP = 4.0
 
 
 class BehaviourLookAround:
-
     def __init__(self):
         """
         Connect to middleware.
@@ -30,7 +26,7 @@ class BehaviourLookAround:
         self.behaviours = mw.Behaviours()
         self.pan = mw.Pan()
         self.tilt = mw.Tilt()
-    
+
     def run(self):
         """
         Main loop.
@@ -62,18 +58,26 @@ class BehaviourLookAround:
                 if enabled and self.pan.enabled and self.tilt.enabled:
                     # behaviour is enabled, move randomly
                     current_pan = self.pan.angle
-                    pan_angle = random.uniform(current_pan - MAX_RANGE, current_pan + MAX_RANGE)
-                    pan_angle = max(self.pan.min_angle, min(self.pan.max_angle, pan_angle))
+                    pan_angle = random.uniform(
+                        current_pan - MAX_RANGE, current_pan + MAX_RANGE
+                    )
+                    pan_angle = max(
+                        self.pan.min_angle, min(self.pan.max_angle, pan_angle)
+                    )
                     self.pan.angle = pan_angle
                     current_tilt = self.tilt.angle
-                    tilt_angle = random.uniform(current_tilt - MAX_RANGE, current_tilt + MAX_RANGE)
-                    tilt_angle = max(self.tilt.min_angle, min(self.tilt.max_angle, tilt_angle))
+                    tilt_angle = random.uniform(
+                        current_tilt - MAX_RANGE, current_tilt + MAX_RANGE
+                    )
+                    tilt_angle = max(
+                        self.tilt.min_angle, min(self.tilt.max_angle, tilt_angle)
+                    )
                     self.tilt.angle = tilt_angle
                     time.sleep(random.uniform(MIN_SLEEP, MAX_SLEEP))
         finally:
             self.node.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     behaviour = BehaviourLookAround()
     behaviour.run()

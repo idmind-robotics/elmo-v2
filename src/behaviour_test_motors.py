@@ -1,6 +1,3 @@
-
-
-
 """
 
 Behaviour node.
@@ -30,7 +27,6 @@ ANGLES = [
 
 
 class BehaviourTestMotors:
-
     def __init__(self):
         """
         Connect to middleware.
@@ -40,7 +36,7 @@ class BehaviourTestMotors:
         self.behaviours = mw.Behaviours()
         self.pan = mw.Pan()
         self.tilt = mw.Tilt()
-    
+
     def run(self):
         """
         Main loop.
@@ -85,6 +81,6 @@ class BehaviourTestMotors:
             self.node.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     behaviour = BehaviourTestMotors()
     behaviour.run()

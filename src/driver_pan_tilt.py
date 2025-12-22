@@ -1,6 +1,3 @@
-
-
-
 """
 
 Driver node.
@@ -11,12 +8,10 @@ Uses the herkulex library to control the servos.
 
 """
 
-
 import time
 
 import herkulex as hx
 import middleware as mw
-
 
 
 TEMPERATURE_SLOPE = 0.7105
@@ -24,7 +19,6 @@ TEMPERATURE_INTERCEPT = -79.47
 
 
 class DriverPanTilt:
-
     def __init__(self):
         """
         Connect to middleware.
@@ -33,7 +27,7 @@ class DriverPanTilt:
         self.pan = mw.Pan()
         self.tilt = mw.Tilt()
         self.node = mw.Node("driver_pan_tilt")
-    
+
     def connect(self):
         """
         Connect to servos.
@@ -103,12 +97,18 @@ class DriverPanTilt:
                     # set pan angle
                     if self.pan.enabled and self.pan.angle_ref != self.pan.angle:
                         self.pan.angle_ref = self.pan.angle
-                        angle = max(self.pan.min_angle, min(self.pan.max_angle, self.pan.angle))
+                        angle = max(
+                            self.pan.min_angle, min(self.pan.max_angle, self.pan.angle)
+                        )
                         # calculate playtime based on motion range.
                         motion_range = abs(self.pan.current_angle - angle)
                         max_motion_range = abs(self.pan.max_angle - self.pan.min_angle)
                         motion_range_percent = motion_range / max_motion_range
-                        playtime = int(self.pan.min_playtime + (self.pan.max_playtime - self.pan.min_playtime) * motion_range_percent)
+                        playtime = int(
+                            self.pan.min_playtime
+                            + (self.pan.max_playtime - self.pan.min_playtime)
+                            * motion_range_percent
+                        )
                         # self.node.loginfo("setting pan angle to %s with playtime %s" % (angle, playtime))
                         angle += self.pan.angle_bias
                         self.servo_pan.set_servo_angle(angle, playtime, 0)
@@ -117,42 +117,59 @@ class DriverPanTilt:
                     # set tilt angle
                     if self.tilt.enabled and self.tilt.angle_ref != self.tilt.angle:
                         self.tilt.angle_ref = self.tilt.angle
-                        angle = max(self.tilt.min_angle, min(self.tilt.max_angle, self.tilt.angle))
+                        angle = max(
+                            self.tilt.min_angle,
+                            min(self.tilt.max_angle, self.tilt.angle),
+                        )
                         # calculate playtime based on motion range.
                         motion_range = abs(self.tilt.current_angle - angle)
-                        max_motion_range = abs(self.tilt.max_angle - self.tilt.min_angle)
+                        max_motion_range = abs(
+                            self.tilt.max_angle - self.tilt.min_angle
+                        )
                         motion_range_percent = motion_range / max_motion_range
-                        playtime = int(self.tilt.min_playtime + (self.tilt.max_playtime - self.tilt.min_playtime) * motion_range_percent)
+                        playtime = int(
+                            self.tilt.min_playtime
+                            + (self.tilt.max_playtime - self.tilt.min_playtime)
+                            * motion_range_percent
+                        )
                         # self.node.loginfo("setting tilt angle to %s with playtime %s" % (angle, playtime))
                         angle += self.tilt.angle_bias
                         self.servo_tilt.set_servo_angle(angle, playtime, 0)
                         time.sleep(0.2)
                         # self.node.loginfo("tilt angle set")
                     # update current angles
-                    self.pan.current_angle = self.servo_pan.get_servo_angle() - self.pan.angle_bias
+                    self.pan.current_angle = (
+                        self.servo_pan.get_servo_angle() - self.pan.angle_bias
+                    )
                     time.sleep(0.2)
-                    self.tilt.current_angle = self.servo_tilt.get_servo_angle() - self.tilt.angle_bias
+                    self.tilt.current_angle = (
+                        self.servo_tilt.get_servo_angle() - self.tilt.angle_bias
+                    )
                     time.sleep(0.2)
                     # update current temperature
                     pan_temperature_raw = self.servo_pan.get_servo_temperature()
                     self.pan.temperature_raw = pan_temperature_raw
-                    self.pan.temperature = TEMPERATURE_SLOPE * pan_temperature_raw + TEMPERATURE_INTERCEPT
+                    self.pan.temperature = (
+                        TEMPERATURE_SLOPE * pan_temperature_raw + TEMPERATURE_INTERCEPT
+                    )
                     time.sleep(0.2)
                     tilt_temperature_raw = self.servo_tilt.get_servo_temperature()
                     self.tilt.temperature_raw = tilt_temperature_raw
-                    self.tilt.temperature = TEMPERATURE_SLOPE * tilt_temperature_raw + TEMPERATURE_INTERCEPT
+                    self.tilt.temperature = (
+                        TEMPERATURE_SLOPE * tilt_temperature_raw + TEMPERATURE_INTERCEPT
+                    )
                     time.sleep(0.2)
                 except IndexError:
                     hx.clear_errors()
                     time.sleep(0.1)
         except hx.HerkulexError as e:
-            print(f'herkulex error: {e}')
+            print(f"herkulex error: {e}")
         finally:
             time.sleep(1.0)
             self.node.shutdown()
             hx.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     node = DriverPanTilt()
     node.run()

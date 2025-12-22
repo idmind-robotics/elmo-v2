@@ -1,4 +1,3 @@
-
 """
 Driver node.
 
@@ -21,11 +20,11 @@ except ImportError:
     # Fallback for Pi 5: define SCL and SDA manually
     import digitalio
     import adafruit_blinka.microcontroller.rp2040.board as rpboard  # Pi5 Blinka I2C
+
     board = rpboard
 
 
 class DriverTouchSensors:
-
     def __init__(self):
         """
         Connect to middleware.
@@ -54,6 +53,6 @@ class DriverTouchSensors:
             self.node.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     node = DriverTouchSensors()
     node.run()

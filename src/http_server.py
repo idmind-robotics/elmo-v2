@@ -1,6 +1,3 @@
-
-
-
 """
 
 This module implements the robot's HTTP server.
@@ -10,7 +7,6 @@ It serves the static resources (images, icons, sounds, videos) and provides an A
 The onboard webpage also performs speech recognition, which is published to this server.
 
 """
-
 
 import os
 import time
@@ -22,17 +18,19 @@ import threading
 from werkzeug.utils import secure_filename
 
 import logging
-log = logging.getLogger('werkzeug')
+
+log = logging.getLogger("werkzeug")
 log.setLevel(logging.ERROR)
 
 import middleware as mw
 
-app = Flask(__name__, static_url_path='')
+app = Flask(__name__, static_url_path="")
 CORS(app)
 
 server = mw.Server()
 onboard = mw.Onboard()
 node = mw.Node("http_server")
+
 
 @app.route("/")
 def index():
@@ -42,12 +40,14 @@ def index():
 @app.route("/api/onboard", methods=["GET", "POST"])
 def onboard_handle():
     if request.method == "GET":
-        return jsonify({
-            "image": onboard.image,
-            "text": onboard.text,
-            "url": onboard.url,
-            "video": onboard.video,
-        })
+        return jsonify(
+            {
+                "image": onboard.image,
+                "text": onboard.text,
+                "url": onboard.url,
+                "video": onboard.video,
+            }
+        )
     elif request.method == "POST":
         request_data = request.json
         if "image" in request_data:
@@ -58,12 +58,14 @@ def onboard_handle():
             onboard.url = request_data["url"]
         if "video" in request_data:
             onboard.video = request_data["video"]
-        return jsonify({
-            "image": onboard.image,
-            "text": onboard.text,
-            "url": onboard.url,
-            "video": onboard.video,
-        })
+        return jsonify(
+            {
+                "image": onboard.image,
+                "text": onboard.text,
+                "url": onboard.url,
+                "video": onboard.video,
+            }
+        )
 
 
 @app.route("/api/onboard/speech", methods=["POST"])
@@ -98,7 +100,7 @@ def icons():
         return jsonify(icon_list)
     elif request.method == "POST":
         print("[POST] icons")
-        file = request.files['file']
+        file = request.files["file"]
         filename = secure_filename(file.filename)
         path = server.static_path + "/icons/"
         file.save(path + filename)
@@ -121,7 +123,7 @@ def images():
         image_list = os.listdir(server.static_path + "/images")
         return jsonify(image_list)
     elif request.method == "POST":
-        file = request.files['file']
+        file = request.files["file"]
         filename = secure_filename(file.filename)
         path = server.static_path + "/images/"
         file.save(path + filename)
@@ -143,12 +145,12 @@ def sounds():
         sound_list = os.listdir(server.static_path + "/sounds")
         return jsonify(sound_list)
     elif request.method == "POST":
-        file = request.files['file']
+        file = request.files["file"]
         filename = secure_filename(file.filename)
         path = server.static_path + "/sounds/"
         file.save(path + filename)
         return jsonify("OK")
-    
+
 
 @app.route("/sounds/<name>", methods=["DELETE"])
 def delete_sound(name):
@@ -165,7 +167,7 @@ def videos():
         video_list = os.listdir(server.static_path + "/videos")
         return jsonify(video_list)
     elif request.method == "POST":
-        file = request.files['file']
+        file = request.files["file"]
         filename = secure_filename(file.filename)
         path = server.static_path + "/videos/"
         file.save(path + filename)
@@ -181,16 +183,15 @@ def delete_video(name):
         return jsonify("OK")
 
 
-
 if __name__ == "__main__":
     server_port = server.http_port
-    server_thread = threading.Thread(target=lambda: app.run(debug=False, port=server_port, host="0.0.0.0"))
-    server_thread.setDaemon(True)
+    server_thread = threading.Thread(
+        target=lambda: app.run(debug=False, port=server_port, host="0.0.0.0")
+    )
+    server_thread.daemon = true
     server_thread.start()
     node.loginfo("server running on port " + str(server_port))
     server.ready = True
     while not node.is_shutdown():
         time.sleep(0.1)
     print("server shutting down")
-
-

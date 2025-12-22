@@ -1,5 +1,3 @@
-
-
 import io
 import logging
 import socketserver
@@ -38,20 +36,21 @@ class StreamingOutput(io.BufferedIOBase):
 
 class StreamingHandler(server.BaseHTTPRequestHandler):
     def do_GET(self):
-        if self.path in ('/', '/index.html'):
-            content = PAGE.encode('utf-8')
+        if self.path in ("/", "/index.html"):
+            content = PAGE.encode("utf-8")
             self.send_response(200)
-            self.send_header('Content-Type', 'text/html')
-            self.send_header('Content-Length', len(content))
+            self.send_header("Content-Type", "text/html")
+            self.send_header("Content-Length", len(content))
             self.end_headers()
             self.wfile.write(content)
 
-        elif self.path == '/stream.mjpg':
+        elif self.path == "/stream.mjpg":
             self.send_response(200)
-            self.send_header('Cache-Control', 'no-cache, private')
-            self.send_header('Pragma', 'no-cache')
-            self.send_header('Content-Type',
-                             'multipart/x-mixed-replace; boundary=FRAME')
+            self.send_header("Cache-Control", "no-cache, private")
+            self.send_header("Pragma", "no-cache")
+            self.send_header(
+                "Content-Type", "multipart/x-mixed-replace; boundary=FRAME"
+            )
             self.end_headers()
 
             try:
@@ -60,16 +59,19 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         output.condition.wait()
                         frame = output.frame
 
-                    self.wfile.write(b'--FRAME\r\n')
-                    self.wfile.write(b'Content-Type: image/jpeg\r\n')
-                    self.wfile.write(b'Content-Length: ' + str(len(frame)).encode() + b'\r\n')
-                    self.wfile.write(b'\r\n')
+                    self.wfile.write(b"--FRAME\r\n")
+                    self.wfile.write(b"Content-Type: image/jpeg\r\n")
+                    self.wfile.write(
+                        b"Content-Length: " + str(len(frame)).encode() + b"\r\n"
+                    )
+                    self.wfile.write(b"\r\n")
                     self.wfile.write(frame)
-                    self.wfile.write(b'\r\n')
+                    self.wfile.write(b"\r\n")
 
             except Exception as e:
-                logging.warning("Client disconnected %s: %s",
-                                self.client_address, str(e))
+                logging.warning(
+                    "Client disconnected %s: %s", self.client_address, str(e)
+                )
 
         else:
             self.send_error(404)
@@ -83,17 +85,13 @@ class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
 
 # --- Camera configuration ---
 picam2 = Picamera2()
-picam2.configure(
-    picam2.create_video_configuration(
-        main={"size": (640, 480)}
-    )
-)
+picam2.configure(picam2.create_video_configuration(main={"size": (640, 480)}))
 
 output = StreamingOutput()
 picam2.start_recording(MJPEGEncoder(), FileOutput(output))
 
 try:
-    address = ('', 8080)
+    address = ("", 8080)
     httpd = StreamingServer(address, StreamingHandler)
     print("Streaming on http://0.0.0.0:8080")
     httpd.serve_forever()

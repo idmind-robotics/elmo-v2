@@ -1,6 +1,3 @@
-
-
-
 """
 
 Driver node.
@@ -11,14 +8,12 @@ GPIO pins are used to control audio and monitor power, the stay enable pin and t
 
 """
 
-
 import lgpio
 import time
 import middleware as mw
 
 
 class DriverGpio:
-
     def __init__(self):
         """
         Connect to middleware.
@@ -32,10 +27,10 @@ class DriverGpio:
 
         # --- INPUTS ---
         lgpio.gpio_claim_input(self.chip, self.gpio.button_pin)
-        #lgpio.gpio_claim_input(self.chip, self.gpio.shutdown_pin)
+        # lgpio.gpio_claim_input(self.chip, self.gpio.shutdown_pin)
 
         # --- OUTPUTS (start HIGH like original code) ---
-        #lgpio.gpio_claim_output(self.chip, self.gpio.stay_enable_pin, 1)
+        # lgpio.gpio_claim_output(self.chip, self.gpio.stay_enable_pin, 1)
         lgpio.gpio_claim_output(self.chip, self.gpio.audio_pin, 1)
         lgpio.gpio_claim_output(self.chip, self.gpio.monitor_pin, 1)
 
@@ -98,11 +93,11 @@ class DriverGpio:
                     self.gpio.button_pressed = False
 
                 # SHUTDOWN PIN
-                #if lgpio.gpio_read(self.chip, self.gpio.shutdown_pin):
+                # if lgpio.gpio_read(self.chip, self.gpio.shutdown_pin):
                 #    if not self.gpio.robot_shutdown:
                 #        self.node.loginfo("gpio: shutdown signal detected")
                 #    self.gpio.robot_shutdown = True
-                #else:
+                # else:
                 #    self.gpio.robot_shutdown = False
 
         except KeyboardInterrupt:
@@ -117,6 +112,6 @@ class DriverGpio:
             self.node.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     node = DriverGpio()
     node.run()

@@ -1,6 +1,3 @@
-
-
-
 """
 
 Touch sensor calibration.
@@ -17,7 +14,6 @@ The window size and sensitivity can be configured.
 
 """
 
-
 import numpy as np
 
 
@@ -30,7 +26,6 @@ SENSITIVITY = 5
 
 
 class TouchCalibrator:
-
     def __init__(self):
         self.windows = {
             "chest": [],
@@ -50,7 +45,7 @@ class TouchCalibrator:
                 if self.touch_sensors.ready:
                     break
             self.node.loginfo("calibrating")
-            while not self.node.is_shutdown(): 
+            while not self.node.is_shutdown():
                 time.sleep(0.1)
                 chest_raw = self.touch_sensors.chest_raw
                 head_0_raw = self.touch_sensors.head_0_raw
@@ -87,15 +82,30 @@ class TouchCalibrator:
                 self.windows["head_3"] = self.windows["head_3"][-WINDOW_SIZE:]
                 # calculate bounds
                 chest_mean = np.mean(self.windows["chest"])
-                chest_upper, chest_lower = chest_mean + SENSITIVITY, chest_mean - SENSITIVITY
+                chest_upper, chest_lower = (
+                    chest_mean + SENSITIVITY,
+                    chest_mean - SENSITIVITY,
+                )
                 head_0_mean = np.mean(self.windows["head_0"])
-                head_0_upper, head_0_lower = head_0_mean + SENSITIVITY, head_0_mean - SENSITIVITY
+                head_0_upper, head_0_lower = (
+                    head_0_mean + SENSITIVITY,
+                    head_0_mean - SENSITIVITY,
+                )
                 head_1_mean = np.mean(self.windows["head_1"])
-                head_1_upper, head_1_lower = head_1_mean + SENSITIVITY, head_1_mean - SENSITIVITY
+                head_1_upper, head_1_lower = (
+                    head_1_mean + SENSITIVITY,
+                    head_1_mean - SENSITIVITY,
+                )
                 head_2_mean = np.mean(self.windows["head_2"])
-                head_2_upper, head_2_lower = head_2_mean + SENSITIVITY, head_2_mean - SENSITIVITY
+                head_2_upper, head_2_lower = (
+                    head_2_mean + SENSITIVITY,
+                    head_2_mean - SENSITIVITY,
+                )
                 head_3_mean = np.mean(self.windows["head_3"])
-                head_3_upper, head_3_lower = head_3_mean + SENSITIVITY, head_3_mean - SENSITIVITY
+                head_3_upper, head_3_lower = (
+                    head_3_mean + SENSITIVITY,
+                    head_3_mean - SENSITIVITY,
+                )
                 # check if latest values are below lower bounds
                 chest_last_3 = self.windows["chest"][-3:]
                 head_0_last_3 = self.windows["head_0"][-3:]
@@ -117,6 +127,6 @@ class TouchCalibrator:
             self.node.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     node = TouchCalibrator()
     node.run()

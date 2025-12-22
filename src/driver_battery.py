@@ -1,5 +1,3 @@
-
-
 """
 
 Driver node.
@@ -7,7 +5,6 @@ Driver node.
 This node reads the battery voltage and publishes it to the middleware.
 
 """
-
 
 import io
 import fcntl
@@ -34,32 +31,31 @@ def battery_percentage(voltage, a=30.955, b=-412.661, c=21.604, d=-0.935):
 
 
 class DriverBattery:
-
     def __init__(self):
         """
         Connect to middleware.
         Initialize node.
         """
         self.battery = mw.Battery()
-        self.file_handle =  io.open("/dev/i2c-1", "rb", buffering=0)
+        self.file_handle = io.open("/dev/i2c-1", "rb", buffering=0)
         fcntl.ioctl(self.file_handle, I2C_SLAVE_COMMAND, self.battery.i2c_address)
         self.node = mw.Node("driver_battery")
         self.voltage_buffer = []
-    
+
     def read_ad(self):
         """
         Read the AD values.
         """
         values = list(self.file_handle.read(2))
         return (values[0] * 256 + values[1]) / 4
-    
+
     def ad_to_voltage(self, value):
         """
         Convert the AD value to voltage.
         """
         voltage = (value * 0.20618 + 2.268) / 10.0
         return voltage
-    
+
     def run(self):
         """
         Main loop.
@@ -83,6 +79,6 @@ class DriverBattery:
             self.node.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     node = DriverBattery()
     node.run()

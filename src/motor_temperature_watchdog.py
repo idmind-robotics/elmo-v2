@@ -11,9 +11,7 @@ import time
 import middleware as mw
 
 
-
 class MotorTemperatureWatchdog:
-
     def __init__(self):
         """
         Connect to middleware.
@@ -23,7 +21,7 @@ class MotorTemperatureWatchdog:
         self.behaviours = mw.Behaviours()
         self.pan = mw.Pan()
         self.tilt = mw.Tilt()
-    
+
     def run(self):
         """
         Main loop.
@@ -49,17 +47,39 @@ class MotorTemperatureWatchdog:
                 pan_temperature = self.pan.temperature
                 tilt_temperature = self.tilt.temperature
                 behaviour_enabled = self.behaviours.look_around
-                hot = pan_temperature > pan_hot_temperature or tilt_temperature > tilt_hot_temperature
-                cool = pan_temperature < pan_cool_temperature and tilt_temperature < tilt_cool_temperature
+                hot = (
+                    pan_temperature > pan_hot_temperature
+                    or tilt_temperature > tilt_hot_temperature
+                )
+                cool = (
+                    pan_temperature < pan_cool_temperature
+                    and tilt_temperature < tilt_cool_temperature
+                )
                 if hot and not was_hot:
-                    self.node.logwarn("motors temperature too high: pan=%f/%f, tilt=%f/%f" % (pan_temperature, pan_hot_temperature, tilt_temperature, tilt_hot_temperature))
+                    self.node.logwarn(
+                        "motors temperature too high: pan=%f/%f, tilt=%f/%f"
+                        % (
+                            pan_temperature,
+                            pan_hot_temperature,
+                            tilt_temperature,
+                            tilt_hot_temperature,
+                        )
+                    )
                     was_hot = True
                     was_cool = False
                     behaviour_was_enabled = behaviour_enabled
                     self.node.logwarn("disabling look_around behaviour")
                     self.behaviours.look_around = False
                 if cool and not was_cool:
-                    self.node.logwarn("motors temperature back to normal: pan=%f/%f, tilt=%f/%f" % (pan_temperature, pan_cool_temperature, tilt_temperature, tilt_cool_temperature))
+                    self.node.logwarn(
+                        "motors temperature back to normal: pan=%f/%f, tilt=%f/%f"
+                        % (
+                            pan_temperature,
+                            pan_cool_temperature,
+                            tilt_temperature,
+                            tilt_cool_temperature,
+                        )
+                    )
                     was_hot = False
                     was_cool = True
                     if behaviour_was_enabled:
@@ -67,11 +87,11 @@ class MotorTemperatureWatchdog:
                         self.behaviours.look_around = True
                     else:
                         self.node.logwarn("look_around behaviour was disabled")
-                                 
+
         finally:
             self.node.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     node = MotorTemperatureWatchdog()
     node.run()

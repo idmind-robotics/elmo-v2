@@ -11,7 +11,6 @@ Uses the neopixel library to control the leds.
 
 """
 
-
 import time
 import board
 import neopixel
@@ -21,7 +20,6 @@ import middleware as mw
 
 
 class DriverLeds:
-
     def __init__(self):
         """
         Connect to middleware.
@@ -31,9 +29,14 @@ class DriverLeds:
         self.node = mw.Node("driver_leds")
         self.leds = mw.Leds()
         self.colors = [[0, 0, 0]] * self.leds.number
-        self.pixels = neopixel.NeoPixel(board.D18, self.leds.number, brightness=self.leds.brightness, auto_write=False)
+        self.pixels = neopixel.NeoPixel(
+            board.D18,
+            self.leds.number,
+            brightness=self.leds.brightness,
+            auto_write=False,
+        )
         print("brightness: %s, %s" % (self.leds.brightness, type(self.leds.brightness)))
-    
+
     def run(self):
         """
         Main loop.
@@ -61,6 +64,6 @@ class DriverLeds:
             self.node.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     driver = DriverLeds()
     driver.run()
