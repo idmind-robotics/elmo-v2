@@ -1,6 +1,3 @@
-
-
-
 import time
 import threading
 import socket
@@ -9,7 +6,7 @@ from flask import Flask, jsonify, request
 from werkzeug.utils import secure_filename
 import logging
 
-logging.getLogger('werkzeug').setLevel(logging.ERROR)
+logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
 import middleware as mw
 
@@ -24,7 +21,6 @@ app = Flask(
 
 
 class Robot:
-
     mw_battery = mw.Battery()
     mw_pan = mw.Pan()
     mw_tilt = mw.Tilt()
@@ -146,11 +142,11 @@ class Robot:
     def set_volume(self, v):
         self.mw_speakers.volume = v
         return True, "OK"
-    
+
     def start_recording(self):
         self.mw_microphone.record = True
         return True, "OK"
-    
+
     def stop_recording(self):
         self.mw_microphone.record = False
         return True, "OK"
@@ -228,7 +224,7 @@ def command():
                 success, message = robot.enable_blush(control)
             if name == "change_mode":
                 success, message = robot.enable_change_mode(control)
-            return jsonify({ "success": True, "message": "OK" })
+            return jsonify({"success": True, "message": "OK"})
         elif op == "set_pan_torque":
             control = req["control"]
             success, message = robot.set_pan_torque(control)
@@ -272,10 +268,12 @@ def command():
         elif op == "manual_prompt":
             robot.mw_onboard.speech = "Can you tell me the capital of spain?"
         else:
-            return jsonify({ "success": False, "message": "%s is not a recognized operation" % op })
-        return jsonify({ "success": success, "message": message })
+            return jsonify(
+                {"success": False, "message": "%s is not a recognized operation" % op}
+            )
+        return jsonify({"success": success, "message": message})
     except Exception as e:
-        return jsonify({ "success": False, "message": str(e) })
+        return jsonify({"success": False, "message": str(e)})
 
 
 def quick_connect():
@@ -283,10 +281,7 @@ def quick_connect():
     mw_server = mw.Server()
     udp_ip = "0.0.0.0"
     udp_port = mw_server.udp_port
-    response_str = "iamarobot;elmo;%s;%d" % (
-        mw_robot.name,
-        mw_server.api_port
-    )
+    response_str = "iamarobot;elmo;%s;%d" % (mw_robot.name, mw_server.api_port)
     response = response_str.encode()
 
     running = False
@@ -307,12 +302,14 @@ def quick_connect():
             pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     udp_server_thread = threading.Thread(target=quick_connect)
-    udp_server_thread.setDaemon(True)
+    udp_server_thread.daemon = true
     udp_server_thread.start()
-    server_thread = threading.Thread(target=lambda: app.run(host="0.0.0.0", port=SERVER_PORT))
-    server_thread.setDaemon(True)
+    server_thread = threading.Thread(
+        target=lambda: app.run(host="0.0.0.0", port=SERVER_PORT)
+    )
+    server_thread.daemon = true
     server_thread.start()
     node = mw.Node("robot_api")
     try:
