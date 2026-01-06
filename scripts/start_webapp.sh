@@ -3,7 +3,7 @@
 export DISPLAY=:0
 export XDG_RUNTIME_DIR=/run/user/1000
 
-exec > /tmp/kiok.log 2>&1
+exec > /tmp/kiosk.log 2>&1
 /bin/bash /home/idmind/elmo-v2/scripts/start.sh &
 
 
