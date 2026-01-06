@@ -304,12 +304,12 @@ def quick_connect():
 
 if __name__ == "__main__":
     udp_server_thread = threading.Thread(target=quick_connect)
-    udp_server_thread.daemon = true
+    udp_server_thread.daemon = True
     udp_server_thread.start()
     server_thread = threading.Thread(
         target=lambda: app.run(host="0.0.0.0", port=SERVER_PORT)
     )
-    server_thread.daemon = true
+    server_thread.daemon = True
     server_thread.start()
     node = mw.Node("robot_api")
     try:

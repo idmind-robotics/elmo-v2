@@ -188,7 +188,7 @@ if __name__ == "__main__":
     server_thread = threading.Thread(
         target=lambda: app.run(debug=False, port=server_port, host="0.0.0.0")
     )
-    server_thread.daemon = true
+    server_thread.daemon = True
     server_thread.start()
     node.loginfo("server running on port " + str(server_port))
     server.ready = True
