@@ -48,6 +48,7 @@ class DriverTouchSensors:
                 self.touch_sensors.head_1_raw = self.mpr121.filtered_data(2)
                 self.touch_sensors.head_2_raw = self.mpr121.filtered_data(3)
                 self.touch_sensors.head_3_raw = self.mpr121.filtered_data(4)
+                self.touch_sensors.head_4_raw = self.mpr121.filtered_data(5)
                 time.sleep(0.1)
         finally:
             self.node.shutdown()

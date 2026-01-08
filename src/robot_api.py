@@ -51,6 +51,13 @@ class Robot:
         self.touch_head_s = self.mw_touch_sensors.touch_head_1
         self.touch_head_e = self.mw_touch_sensors.touch_head_2
         self.touch_head_w = self.mw_touch_sensors.touch_head_3
+        self.touch_head_c = self.mw_touch_sensors.touch_head_3
+        self.touch_chest_value = self.mw_touch_sensors.chest_raw
+        self.touch_head_n_value = self.mw_touch_sensors.head_0_raw
+        self.touch_head_s_value = self.mw_touch_sensors.head_1_raw
+        self.touch_head_e_value = self.mw_touch_sensors.head_2_raw
+        self.touch_head_w_value = self.mw_touch_sensors.head_3_raw
+        self.touch_head_c_value = self.mw_touch_sensors.head_4_raw
         self.behaviour_look_around = self.mw_behaviours.look_around
         self.behaviour_blush = self.mw_behaviours.blush
         self.video_list = self.mw_server.get_video_list()
@@ -80,6 +87,13 @@ class Robot:
         self.touch_head_s = self.mw_touch_sensors.touch_head_1
         self.touch_head_e = self.mw_touch_sensors.touch_head_2
         self.touch_head_w = self.mw_touch_sensors.touch_head_3
+        self.touch_head_c = self.mw_touch_sensors.touch_head_4
+        self.touch_chest_value = self.mw_touch_sensors.chest_raw
+        self.touch_head_n_value = self.mw_touch_sensors.head_0_raw
+        self.touch_head_s_value = self.mw_touch_sensors.head_1_raw
+        self.touch_head_e_value = self.mw_touch_sensors.head_2_raw
+        self.touch_head_w_value = self.mw_touch_sensors.head_3_raw
+        self.touch_head_c_value = self.mw_touch_sensors.head_4_raw
         self.behaviour_look_around = self.mw_behaviours.look_around
         self.behaviour_blush = self.mw_behaviours.blush
         self.video_list = self.mw_server.get_video_list()

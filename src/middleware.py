@@ -297,11 +297,13 @@ class TouchSensors(DBEntry):
         "touch_head_1": False,
         "touch_head_2": False,
         "touch_head_3": False,
+        "touch_head_4": False,
         "chest_raw": 0,
         "head_0_raw": 0,
         "head_1_raw": 0,
         "head_2_raw": 0,
         "head_3_raw": 0,
+        "head_4_raw": 0,
     }
 
     def head_touch(self):
@@ -311,6 +313,7 @@ class TouchSensors(DBEntry):
                 self.touch_head_1,
                 self.touch_head_2,
                 self.touch_head_3,
+                self.touch_head_4,
             )
         )
 
