@@ -23,7 +23,10 @@ def set_key(key, value):
 
 
 def get_key(key):
-    return json.loads(connection.get(key))
+    val = connection.get(key)
+    if val is None:
+        return None
+    return json.loads(val)
 
 
 def has_key(key):
@@ -499,6 +502,7 @@ class Behaviours(DBEntry):
         "photographer": False,
         "akinator": False,
         "wifi_connect": False,
+        "face_detection": True,
     }
 
     def list_behaviours(self):
