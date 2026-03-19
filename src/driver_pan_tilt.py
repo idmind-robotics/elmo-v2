@@ -34,7 +34,7 @@ class DriverPanTilt:
         """
         pan_id = self.pan.id
         tilt_id = self.tilt.id
-        hx.connect("/dev/serial0", 115200)
+        hx.connect("/dev/ttyAMA0", 115200)
         self.node.loginfo("connected to serial port")
         hx.clear_errors()
         time.sleep(1.0)
