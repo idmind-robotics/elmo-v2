@@ -34,15 +34,16 @@ class BehaviourHello:
         self.detector = cv2.FaceDetectorYN.create('/home/idmind/elmo-v2/src/yunet.onnx', '', (FRAME_W, FRAME_H))
         self.stream = cv2.VideoCapture("http://localhost:8080/stream.mjpg")
         self.latest_frame = None
+        self.onboard = mw.Onboard()
         self.lock = threading.Lock()
         self.running = True
-        t = threading.Thread(target=self._reader, daemon=True)
+        t = threading.Thread(target=self.reader, daemon=True)
         t.start()
         time.sleep(2)
         self.node.loginfo("Camera ready.")
 
 
-    def _reader(self):
+    def reader(self):
         while self.running:
             ret, frame = self.stream.read()
             if ret:
@@ -108,6 +109,14 @@ class BehaviourHello:
             while not self.node.is_shutdown():
                 time.sleep(0.1)
                 now = time.time()
+
+                # pause when photographer is active
+                if self.behaviours.photographer:
+                    face_detected = False
+                    consecutive = 0
+                    time.sleep(0.5)
+                    continue
+
                 detected, cx, cy = self.detect_face()
 
                 if detected:
@@ -117,10 +126,16 @@ class BehaviourHello:
                         face_detected = True
                         if now - last_greeted > COOLDOWN:
                             self.node.loginfo("Face detected.")
+                            image_url = self.server.url_for_image("happy.png")
+                            self.onboard.image = image_url
+                            # selects one of the three files and plays that sound.
                             sounds = ['hello.wav', 'hello2.wav', 'hello3.wav']
                             chosen = sounds[int(time.time()) % len(sounds)]
                             self.node.loginfo(f"Face detected - playing {chosen}")
                             self.speakers.url = self.server.url_for_sound(chosen)
+                            time.sleep(3.0)
+                            image_url = self.server.url_for_image("normal.png")
+                            self.onboard.image = image_url
                             last_greeted = now
                     if face_detected:
                         self.track_face(cx, cy)
