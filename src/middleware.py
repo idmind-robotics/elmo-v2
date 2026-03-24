@@ -499,7 +499,7 @@ class Behaviours(DBEntry):
         "test_motors": False,
         "blush": True,
         "conversation": False,
-        "photographer": False,
+        "photographer": True,
         "akinator": False,
         "wifi_connect": False,
         "face_detection": True,
