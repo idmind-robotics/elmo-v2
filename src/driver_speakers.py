@@ -15,10 +15,25 @@ import middleware as mw
 
 
 class DriverSpeakers:
+    """
+    Middleware driver node for audio playback control.
+
+    Attributes
+    ----------
+    speakers : mw.Speakers
+        Middleware speakers state object with `url`, `playing`, `volume`, `ready`.
+    volume : int
+        Last applied volume level (0-100).
+    node : mw.Node
+        Middleware node for shutdown and logging.
+    process : multiprocessing.Process | None
+        Worker process created to run `play_sound`.
+    playback_process : subprocess.Popen | None
+        Child process for streaming and playback (`pw-play`).
+    """
     def __init__(self):
         """
-        Connect to middleware.
-        Initialize node.
+        Initialize middleware speaker state and node.
         """
         self.speakers = mw.Speakers()
         self.volume = 0
@@ -28,7 +43,22 @@ class DriverSpeakers:
 
     def play_sound(self, url):
         """
-        Play a sound.
+        Stream and play an audio URL using pw-play.
+
+        Parameters
+        ----------
+        url : str
+            Remote media URL to play.
+
+        Returns
+        -------
+        None
+
+        Side effects
+        ------------
+        - Sets `self.speakers.playing` to url.
+        - Runs `curl` piped into `pw-play`.
+        - Resets `self.speakers.url` and `self.speakers.playing` to None on completion.
         """
         self.speakers.playing = url
         print(f"playing {url}")
@@ -55,7 +85,16 @@ class DriverSpeakers:
 
     def stop_sound(self):
         """
-        Stop playing a sound.
+        Stop the current playback process if running.
+
+        Returns
+        -------
+        None
+
+        Side effects
+        ------------
+        - Attempts graceful termination of `pw-play` process.
+        - Kills it if it does not exit within 2 seconds.
         """
         print(f"stopping")
         if self.playback_process:
@@ -69,7 +108,16 @@ class DriverSpeakers:
 
     def run(self):
         """
-        Main loop.
+        Main loop that syncs middleware sound state to playback/volume.
+
+        Behavior
+        --------
+        - Sets `speakers.ready` True.
+        - Checks `speakers.url` and `speakers.playing` every 0.1 second.
+        - Starts new playback process when URL changes.
+        - Stops audio when `speakers.url` becomes None.
+        - Adjusts PipeWire master volume when `speakers.volume` changes.
+        - Ensures sound is stopped and node is shutdown in finally.
         """
         try:
             self.speakers.ready = True

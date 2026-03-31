@@ -20,11 +20,29 @@ import middleware as mw
 
 
 class DriverLeds:
+    """
+    Middleware driver node for NeoPixel LED matrix control.
+
+    Attributes
+    ----------
+    node : mw.Node
+        Middleware node for status, shutdown and logging.
+    leds : mw.Leds
+        Middleware LED state object, including `number`, `brightness`, `colors`.
+    colors : list[list[int]]
+        Cached last written LED RGB values.
+    pixels : neopixel.NeoPixel
+        NeoPixel object controlling the physical LED strip/matrix.
+    """
     def __init__(self):
         """
-        Connect to middleware.
-        Initialize node.
-        Connect to neopixel.
+        Initialize middleware node and NeoPixel hardware.
+
+        Side effects
+        ------------
+        - Creates `mw.Node("driver_leds")`.
+        - Configures NeoPixel on `board.D18` with provided count/brightness.
+        - Prints initial brightness to stdout.
         """
         self.node = mw.Node("driver_leds")
         self.leds = mw.Leds()
@@ -39,7 +57,16 @@ class DriverLeds:
 
     def run(self):
         """
-        Main loop.
+        Main loop that refreshes NeoPixel LEDs based on middleware state.
+
+        Behavior
+        --------
+        - Sets `leds.ready` True.
+        - Polls every 0.1 seconds while node is active.
+        - Writes new color values when they differ from cached state.
+        - Clamps RGB channels to [0, 255].
+        - Ensures all LEDs are turned off and node is shutdown on exit.
+        - Handles KeyboardInterrupt gracefully.
         """
         try:
             self.leds.ready = True

@@ -19,10 +19,30 @@ import middleware as mw
 
 
 class DriverMicrophone:
+    """
+    Middleware driver node for microphone recording control.
+
+    Attributes
+    ----------
+    node : mw.Node
+        Middleware node used for status, shutdown, and logging.
+    microphone : mw.Microphone
+        Middleware microphone state object with recording flags.
+    server : mw.Server
+        Middleware server object, used for static path resolution.
+    recording_process : subprocess.Popen | None
+        Process handle for active audio recording command.
+    microphone_target : str | None
+        Optional audio capture target from `MICROPHONE_TARGET` environment variable.
+    """
     def __init__(self):
         """
-        Connect to middleware.
-        Initialize node.
+        Create driver middleware objects and initialize recording target.
+
+        Side effects
+        ------------
+        - Connect to middleware Node, Microphone, and Server.
+        - Reads the `MICROPHONE_TARGET` environment variable.
         """
         self.node = mw.Node("driver_microphone")
         self.microphone = mw.Microphone()
@@ -32,6 +52,17 @@ class DriverMicrophone:
         self.microphone_target = os.environ.get("MICROPHONE_TARGET")
 
     def start_recording_audio(self):
+        """
+        Start recording audio to a file using pw-record.
+
+        The output file is `{server.static_path}/sounds/mic.wav`.
+        If `microphone_target` is set, records from that target.
+        Sets `microphone.is_recording` to True.
+
+        Returns
+        -------
+        None
+        """
         # start recording audio using pw-record (PipeWire native)
         output_file = f"{self.server.static_path}/sounds/mic.wav"
         cmd = ["pw-record", "--format=s16", "--channels=1", "--rate=44100", output_file]
@@ -44,6 +75,16 @@ class DriverMicrophone:
         self.microphone.is_recording = True
 
     def stop_recording_audio(self):
+        """
+        Stop the current recording process, gracefully if possible.
+
+        Terminates the process and waits up to 5 seconds; kills if timeout.
+        Resets `microphone.is_recording` to False.
+
+        Returns
+        -------
+        None
+        """
         # stop recording audio #TODO Validate and handle errors, logging
         if self.recording_process:
             self.recording_process.terminate()
@@ -57,7 +98,14 @@ class DriverMicrophone:
 
     def run(self):
         """
-        Main loop.
+        Main loop syncing middleware recording flags with actual recorder process.
+
+        Behavior
+        --------
+        - Sets `microphone.ready` True.
+        - Polls the middleware state every 0.1 second.
+        - Starts/stops recording based on `microphone.record` and `microphone.is_recording`.
+        - Handles KeyboardInterrupt gracefully and shuts down the middleware node in finally.
         """
         try:
             self.microphone.ready = True

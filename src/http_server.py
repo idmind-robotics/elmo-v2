@@ -34,11 +34,33 @@ node = mw.Node("http_server")
 
 @app.route("/")
 def index():
+    """
+    Serve the main index.html page.
+
+    Returns
+    -------
+    str
+        HTML content of the onboard webpage.
+    """
     return send_from_directory(server.static_path, "index.html")
 
 
 @app.route("/api/onboard", methods=["GET", "POST"])
 def onboard_handle():
+    """
+    Get or update onboard display state.
+
+    Returns
+    -------
+    dict
+        JSON with keys: image, text, url, video (current state on GET;
+        updated state on POST).
+
+    Notes
+    -----
+    - GET: Returns current onboard display configuration.
+    - POST: Updates onboard state from request JSON and returns new state.
+    """
     if request.method == "GET":
         return jsonify(
             {
@@ -70,6 +92,19 @@ def onboard_handle():
 
 @app.route("/api/onboard/speech", methods=["POST"])
 def onboard_speech():
+    """
+    Handle speech recognition results from the onboard webpage.
+
+    Returns
+    -------
+    dict
+        Empty JSON object.
+
+    Notes
+    -----
+    Expects POST JSON with "result" field containing recognized speech text.
+    Updates `onboard.speech` and prints to console.
+    """
     r = request.json["result"]
     print("speech: " + r)
     onboard.speech = r
@@ -78,6 +113,19 @@ def onboard_speech():
 
 @app.route("/api/onboard/log", methods=["POST"])
 def onboard_log():
+    """
+    Handle logging messages from the onboard webpage.
+
+    Returns
+    -------
+    dict
+        Empty JSON object.
+
+    Notes
+    -----
+    Expects POST JSON with one of: "info", "warn", "error" fields.
+    Prefixes log message with "Onboard" and logs via middleware node.
+    """
     if "info" in request.json:
         log = "Onboard " + request.json["info"]
         node.loginfo(log)
@@ -95,6 +143,20 @@ def onboard_log():
 
 @app.route("/icons", methods=["GET", "POST"])
 def icons():
+    """
+    List or upload icon files.
+
+    Returns
+    -------
+    dict or str
+        GET: JSON list of icon filenames.
+        POST: JSON "OK" on success.
+
+    Notes
+    -----
+    - GET: Returns filenames from the icons directory.
+    - POST: Accepts multipart file upload; saves with secure filename.
+    """
     if request.method == "GET":
         icon_list = os.listdir(server.static_path + "/icons")
         return jsonify(icon_list)
@@ -110,6 +172,19 @@ def icons():
 
 @app.route("/icons/<name>", methods=["DELETE"])
 def delete_icon(name):
+    """
+    Delete an icon by filename.
+
+    Parameters
+    ----------
+    name : str
+        Icon filename to delete.
+
+    Returns
+    -------
+    dict
+        JSON "OK" on success.
+    """
     if request.method == "DELETE":
         full_name = server.static_path + "/icons/" + name
         print("deleting " + full_name)
@@ -119,6 +194,20 @@ def delete_icon(name):
 
 @app.route("/images", methods=["GET", "POST"])
 def images():
+    """
+    List or upload image files.
+
+    Returns
+    -------
+    dict or str
+        GET: JSON list of image filenames.
+        POST: JSON "OK" on success.
+
+    Notes
+    -----
+    - GET: Returns filenames from the images directory.
+    - POST: Accepts multipart file upload; saves with secure filename.
+    """
     if request.method == "GET":
         image_list = os.listdir(server.static_path + "/images")
         return jsonify(image_list)
@@ -132,6 +221,19 @@ def images():
 
 @app.route("/images/<name>", methods=["DELETE"])
 def delete_image(name):
+    """
+    Delete an image by filename.
+
+    Parameters
+    ----------
+    name : str
+        Image filename to delete.
+
+    Returns
+    -------
+    dict
+        JSON "OK" on success.
+    """
     if request.method == "DELETE":
         full_name = server.static_path + "/images/" + name
         print("deleting " + full_name)
@@ -141,6 +243,20 @@ def delete_image(name):
 
 @app.route("/sounds", methods=["GET", "POST"])
 def sounds():
+    """
+    List or upload sound files.
+
+    Returns
+    -------
+    dict or str
+        GET: JSON list of sound filenames.
+        POST: JSON "OK" on success.
+
+    Notes
+    -----
+    - GET: Returns filenames from the sounds directory.
+    - POST: Accepts multipart file upload; saves with secure filename.
+    """
     if request.method == "GET":
         sound_list = os.listdir(server.static_path + "/sounds")
         return jsonify(sound_list)
@@ -154,6 +270,19 @@ def sounds():
 
 @app.route("/sounds/<name>", methods=["DELETE"])
 def delete_sound(name):
+    """
+    Delete a sound by filename.
+
+    Parameters
+    ----------
+    name : str
+        Sound filename to delete.
+
+    Returns
+    -------
+    dict
+        JSON "OK" on success.
+    """
     if request.method == "DELETE":
         full_name = server.static_path + "/sounds/" + name
         print("deleting " + full_name)
@@ -163,6 +292,20 @@ def delete_sound(name):
 
 @app.route("/videos", methods=["GET", "POST"])
 def videos():
+    """
+    List or upload video files.
+
+    Returns
+    -------
+    dict or str
+        GET: JSON list of video filenames.
+        POST: JSON "OK" on success.
+
+    Notes
+    -----
+    - GET: Returns filenames from the videos directory.
+    - POST: Accepts multipart file upload; saves with secure filename.
+    """
     if request.method == "GET":
         video_list = os.listdir(server.static_path + "/videos")
         return jsonify(video_list)
@@ -176,6 +319,19 @@ def videos():
 
 @app.route("/videos/<name>", methods=["DELETE"])
 def delete_video(name):
+    """
+    Delete a video by filename.
+
+    Parameters
+    ----------
+    name : str
+        Video filename to delete.
+
+    Returns
+    -------
+    dict
+        JSON "OK" on success.
+    """
     if request.method == "DELETE":
         full_name = server.static_path + "/videos/" + name
         print("deleting " + full_name)
