@@ -1,6 +1,3 @@
-#! /usr/bin/env python
-
-
 """
 
 Behaviour node.
@@ -10,7 +7,6 @@ plays a sound and changes the leds.
 
 """
 
-
 import time
 
 import middleware as mw
@@ -18,14 +14,33 @@ import middleware as mw
 
 LOOP_RATE = 10
 TOUCH_COUNTER_THRESHOLD = 3
-COOLDOWN = 5 * LOOP_RATE
+COOLDOWN = 2 * LOOP_RATE
 
 
 class BehaviourBlush:
+    """
+    Middleware behaviour that triggers a "blush" animation on touch.
+
+    Attributes
+    ----------
+    touch_sensors : mw.TouchSensors
+        Middleware touch sensor state used to detect head touches.
+    leds : mw.Leds
+        Middleware LED controller for icon/animation display.
+    onboard : mw.Onboard
+        Middleware onboard display controller for images.
+    speakers : mw.Speakers
+        Middleware speaker controller for playing sounds.
+    behaviours : mw.Behaviours
+        Middleware behaviour configuration flags.
+    server : mw.Server
+        Middleware server helper for resource URLs.
+    node : mw.Node
+        Middleware node used for shutdown and logging.
+    """
     def __init__(self):
         """
-        Connect to middleware.
-        Initialize node.
+        Initialize middleware objects and behaviour node.
         """
         self.touch_sensors = mw.TouchSensors()
         self.leds = mw.Leds()
@@ -34,28 +49,54 @@ class BehaviourBlush:
         self.behaviours = mw.Behaviours()
         self.server = mw.Server()
         self.node = mw.Node("behaviour_blush")
-    
+
     def blush(self):
         """
-        Blush routine.
-        Updates the onboard image, plays a sound and changes the leds.
+        Execute blush behaviour routine.
+
+        Behavior
+        --------
+        - Logs blushing activity.
+        - Stores previous LED icon URL.
+        - Sets onboard image to "love.png".
+        - Plays "love.wav" via speakers.
+        - Loads "heartbeat.gif" into LEDs.
+        - Waits 5 seconds.
+        - Restores onboard image and previous LEDs icon URL.
+        - Assumes middleware fields are set and available.
         """
         self.node.loginfo("blushing")
+        previous_icon_url = self.leds.url
         image_url = self.server.url_for_image("love.png")
         self.onboard.image = image_url
         sound_url = self.server.url_for_sound("love.wav")
         self.speakers.url = sound_url
         icon_url = self.server.url_for_icon("heartbeat.gif")
-        self.leds.load_from_url(icon_url) 
+        self.leds.load_from_url(icon_url)
         time.sleep(5.0)
         image_url = self.server.url_for_image("normal.png")
         self.onboard.image = image_url
-        icon_url = self.server.url_for_icon("elmo_idm.png")
-        self.leds.load_from_url(icon_url)
+        self.leds.load_from_url(previous_icon_url)
+        # icon_url = self.server.url_for_icon("elmo_idm.png")
+        # self.leds.load_from_url(icon_url)
 
     def run(self):
         """
-        Main loop.
+        Main behaviour loop.
+
+        Behavior
+        --------
+        - Logs startup.
+        - Polls at `LOOP_RATE`.
+        - Checks `behaviours.blush` and head touch events.
+        - Uses touch count threshold (`TOUCH_COUNTER_THRESHOLD`) and cooldown
+          (`COOLDOWN`) to avoid repeated trigger.
+        - Calls `blush()` when conditions are met.
+        - Always shuts down node in finally block.
+
+        Returns
+        -------
+        None
         """
         try:
             self.node.loginfo("starting behaviour")
@@ -76,6 +117,6 @@ class BehaviourBlush:
             self.node.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     node = BehaviourBlush()
     node.run()

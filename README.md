@@ -1,5 +1,23 @@
-# Elmo V2
+## IMPORTANT NOTE
 
+This code is a glass release for Elmo. It is an adaptation to allow to run the code in a Raspberry Pi 5, with python 3.9.25, with Debian 13 (The main code was made to run in a Rapberry Pi 4 with an older version of Raspi OS). 
+To run the code manually, please use "pyenv activate py39-elmo" to activate the environment. (The app also needs to be run in python 3.9)
+Below there are some possible failure conditions for the code that is running on Elmo : 
+
+ - **FIXED** : The code in the script "driver_gpio.py" is not working correctly. Even though the shutdown signal is sent via GPIO, the raspi does not initiate shutdown, which can cause SD card corruption. If that happens, please take the SD card and you can easily clean the corrupted files in any linux machine  - Moved shutdown and poweroff button triggers to raspberry pi boot config files. 
+
+ - REDIS, the middleware used, can also be corrupted if the shutdown is not done correctly. It can even block the startup. If that happens run the "redis-check-aof --fix" command with the file appendonly (should be at ~/var/lib/redis/appendonlydir)
+
+ - Some Debian tools used in raspberry pi 5 where downgraded to comply with the code that was developed (X11 server instead of Wayland as a display manager, PulseAudio instead of PipeWire).
+
+ - If Elmo's eyes appear incorrect in the screen, it is probably because the "fix_monitor.sh" didn't run correctly. Please check if the HDMI in that script coincides with the one being used. 
+
+ - REDIS was installed by source, so the installation script for this code doesn't run
+
+ - All the sensors and actuators (touch sensors, LED Matrix, Herculex Servos, Speakers and Microphone and Camera) were tested and ran correctly. There is one head sensor that wasn't implemented, but that can easily be done if needed in "driver_touch_sensors.py" and "middleware.py"
+
+
+# Elmo V2
 
 ![alt text](media/cute_elmo_v2.jpg)
 

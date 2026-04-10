@@ -1,6 +1,3 @@
-#! /usr/bin/env python
-
-
 import time
 import threading
 import socket
@@ -9,7 +6,7 @@ from flask import Flask, jsonify, request
 from werkzeug.utils import secure_filename
 import logging
 
-logging.getLogger('werkzeug').setLevel(logging.ERROR)
+logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
 import middleware as mw
 
@@ -24,6 +21,80 @@ app = Flask(
 
 
 class Robot:
+    """
+    Represents a robotic system with sensors, actuators, and multimedia capabilities.
+
+    Attributes
+    ----------
+    battery : float
+        Current battery voltage.
+    battery_percentage : float
+        Battery charge as a percentage.
+    pan : float
+        Current pan angle of the robot's head.
+    tilt : float
+        Current tilt angle of the robot's head.
+    pan_min : float
+        Minimum allowed pan angle.
+    pan_max : float
+        Maximum allowed pan angle.
+    tilt_min : float
+        Minimum allowed tilt angle.
+    tilt_max : float
+        Maximum allowed tilt angle.
+    pan_torque : bool
+        Whether pan motor torque is enabled.
+    tilt_torque : bool
+        Whether tilt motor torque is enabled.
+    pan_temperature : float
+        Temperature of the pan motor.
+    tilt_temperature : float
+        Temperature of the tilt motor.
+    touch_chest : bool
+        Whether the chest touch sensor is active.
+    touch_head_n : bool
+        North head touch sensor state.
+    touch_head_s : bool
+        South head touch sensor state.
+    touch_head_e : bool
+        East head touch sensor state.
+    touch_head_w : bool
+        West head touch sensor state.
+    touch_head_c : bool
+        Center head touch sensor state.
+    touch_chest_value : int
+        Raw value from the chest touch sensor.
+    touch_head_n_value : int
+        Raw value from the north head touch sensor.
+    touch_head_s_value : int
+        Raw value from the south head touch sensor.
+    touch_head_e_value : int
+        Raw value from the east head touch sensor.
+    touch_head_w_value : int
+        Raw value from the west head touch sensor.
+    touch_head_c_value : int
+        Raw value from the center head touch sensor.
+    behaviour_look_around : bool
+        Whether the robot is performing the "look around" behaviour.
+    behaviour_blush : bool
+        Whether the robot is performing the "blush" behaviour.
+    video_list : list
+        List of available videos on the robot.
+    sound_list : list
+        List of available sounds on the robot.
+    image_list : list
+        List of available images on the robot.
+    icon_list : list
+        List of available icons on the robot.
+    volume : float
+        Current speaker volume.
+    multimedia_port : int
+        Port used by the robot's multimedia server.
+    microphone_is_recording : bool
+        Whether the microphone is currently recording.
+    recognized_speech : str
+        Most recently recognized speech input.
+    """
 
     mw_battery = mw.Battery()
     mw_pan = mw.Pan()
@@ -55,6 +126,13 @@ class Robot:
         self.touch_head_s = self.mw_touch_sensors.touch_head_1
         self.touch_head_e = self.mw_touch_sensors.touch_head_2
         self.touch_head_w = self.mw_touch_sensors.touch_head_3
+        self.touch_head_c = self.mw_touch_sensors.touch_head_3
+        self.touch_chest_value = self.mw_touch_sensors.chest_raw
+        self.touch_head_n_value = self.mw_touch_sensors.head_0_raw
+        self.touch_head_s_value = self.mw_touch_sensors.head_1_raw
+        self.touch_head_e_value = self.mw_touch_sensors.head_2_raw
+        self.touch_head_w_value = self.mw_touch_sensors.head_3_raw
+        self.touch_head_c_value = self.mw_touch_sensors.head_4_raw
         self.behaviour_look_around = self.mw_behaviours.look_around
         self.behaviour_blush = self.mw_behaviours.blush
         self.video_list = self.mw_server.get_video_list()
@@ -67,6 +145,13 @@ class Robot:
         self.recognized_speech = self.mw_onboard.speech
 
     def update(self):
+        """
+        Updates all robot attributes by reading the current state from the middleware.
+
+        Side effects
+        ------------
+        Updates all attributes such as sensors, motors, behaviours, multimedia lists, and recording status.
+        """
         self.battery = self.mw_battery.voltage
         self.battery_percentage = self.mw_battery.percentage
         self.pan = self.mw_pan.current_angle
@@ -84,6 +169,13 @@ class Robot:
         self.touch_head_s = self.mw_touch_sensors.touch_head_1
         self.touch_head_e = self.mw_touch_sensors.touch_head_2
         self.touch_head_w = self.mw_touch_sensors.touch_head_3
+        self.touch_head_c = self.mw_touch_sensors.touch_head_4
+        self.touch_chest_value = self.mw_touch_sensors.chest_raw
+        self.touch_head_n_value = self.mw_touch_sensors.head_0_raw
+        self.touch_head_s_value = self.mw_touch_sensors.head_1_raw
+        self.touch_head_e_value = self.mw_touch_sensors.head_2_raw
+        self.touch_head_w_value = self.mw_touch_sensors.head_3_raw
+        self.touch_head_c_value = self.mw_touch_sensors.head_4_raw
         self.behaviour_look_around = self.mw_behaviours.look_around
         self.behaviour_blush = self.mw_behaviours.blush
         self.video_list = self.mw_server.get_video_list()
@@ -100,34 +192,144 @@ class Robot:
         self.icon_list = self.mw_server.get_icon_list()
 
     def enable_look_around(self, control):
+        """
+        Enable or disable the "look around" behaviour.
+
+        Parameters
+        ----------
+        control : bool
+            True to enable, False to disable.
+
+        Returns
+        -------
+        tuple
+            (success: bool, message: str) Always returns (True, "OK").
+        """
         self.mw_behaviours.look_around = bool(control)
         return True, "OK"
 
     def enable_blush(self, control):
+        """
+        Enable or disable the "blush" behaviour.
+
+        Parameters
+        ----------
+        control : bool
+            True to enable, False to disable.
+
+        Returns
+        -------
+        tuple
+            (success: bool, message: str) Always returns (True, "OK").
+        """
         self.mw_behaviours.blush = bool(control)
         return True, "OK"
 
     def enable_change_mode(self, control):
+        """
+        Enable or disable the robot's mode change behaviour.
+
+        Parameters
+        ----------
+        control : bool
+            True to enable, False to disable.
+
+        Returns
+        -------
+        tuple
+            (success: bool, message: str) Always returns (True, "OK").
+        """
         self.mw_behaviours.change_mode = bool(control)
         return True, "OK"
 
     def set_pan_torque(self, control):
+        """
+        Enable or disable torque for the pan motor.
+
+        Parameters
+        ----------
+        control : bool
+            True to enable torque, False to disable.
+
+        Returns
+        -------
+        tuple
+            (success: bool, message: str) Always returns (True, "OK").
+        """
         self.mw_pan.enable = bool(control)
         return True, "OK"
 
     def set_pan(self, angle):
+        """
+        Set the pan angle of the robot's head.
+
+        Parameters
+        ----------
+        angle : float
+            Target pan angle in degrees.
+
+        Returns
+        -------
+        tuple
+            (success: bool, message: str) Always returns (True, "OK").
+        """
         self.mw_pan.angle = angle
         return True, "OK"
 
     def set_tilt_torque(self, control):
+        """
+        Enable or disable torque for the tilt motor.
+
+        Parameters
+        ----------
+        control : bool
+            True to enable torque, False to disable.
+
+        Returns
+        -------
+        tuple
+            (success: bool, message: str) Always returns (True, "OK").
+        """
         self.mw_tilt.enable = bool(control)
         return True, "OK"
 
     def set_tilt(self, angle):
+        """
+        Set the tilt angle of the robot's head.
+
+        Parameters
+        ----------
+        angle : float
+            Target tilt angle in degrees.
+
+        Returns
+        -------
+        tuple
+            (success: bool, message: str) Always returns (True, "OK").
+        """
         self.mw_tilt.angle = angle
         return True, "OK"
 
     def update_motor_limits(self, pan_min, pan_max, tilt_min, tilt_max):
+        """
+        Update the min and max limits of the pan and tilt motors.
+
+        Parameters
+        ----------
+        pan_min : float
+            Minimum pan angle.
+        pan_max : float
+            Maximum pan angle.
+        tilt_min : float
+            Minimum tilt angle.
+        tilt_max : float
+            Maximum tilt angle.
+
+        Returns
+        -------
+        tuple
+            (success: bool, message: str) Always returns (True, "OK").
+        """
         self.mw_pan.min_angle = pan_min
         self.mw_pan.max_angle = pan_max
         self.mw_tilt.min_angle = tilt_min
@@ -135,27 +337,91 @@ class Robot:
         return True, "OK"
 
     def play_sound(self, name):
+        """
+        Play a sound stored on the robot.
+
+        Parameters
+        ----------
+        name : str
+            Name of the sound file.
+
+        Returns
+        -------
+        tuple
+            (success: bool, message: str) Always returns (True, "OK").
+        """
         url = self.mw_server.url_for_sound(name)
         self.mw_speakers.url = url
         return True, "OK"
 
     def pause_audio(self):
+        """
+        Stop any currently playing audio.
+
+        Returns
+        -------
+        tuple
+            (success: bool, message: str) Always returns (True, "OK").
+        """
         self.mw_speakers.url = None
         return True, "OK"
 
     def set_volume(self, v):
+        """
+        Set the speaker volume.
+
+        Parameters
+        ----------
+        v : float
+            Volume level.
+
+        Returns
+        -------
+        tuple
+            (success: bool, message: str) Always returns (True, "OK").
+        """
         self.mw_speakers.volume = v
         return True, "OK"
-    
+
     def start_recording(self):
+        """
+        Start microphone recording.
+
+        Returns
+        -------
+        tuple
+            (success: bool, message: str) Always returns (True, "OK").
+        """
         self.mw_microphone.record = True
         return True, "OK"
-    
+
     def stop_recording(self):
+        """
+        Stop microphone recording.
+
+        Returns
+        -------
+        tuple
+            (success: bool, message: str) Always returns (True, "OK").
+        """
         self.mw_microphone.record = False
         return True, "OK"
 
     def update_leds(self, colors):
+        """
+        Update the colors of all LEDs.
+
+        Parameters
+        ----------
+        colors : list of tuple
+            List of RGB tuples for each LED.
+
+        Returns
+        -------
+        tuple
+            (success: bool, message: str) Returns False with an error message if
+            the color list length or tuple size is incorrect.
+        """
         if len(colors) != self.mw_leds.number:
             return False, "Need %d colors, got %d" % (self.mw_leds.number, len(colors))
         correct_size = all([len(c) == 3 for c in colors])
@@ -165,11 +431,44 @@ class Robot:
         return True, "OK"
 
     def update_leds_icon(self, name):
+        """
+        Update the LEDs to display a pre-defined icon.
+
+        Parameters
+        ----------
+        name : str
+            Name of the icon.
+
+        Returns
+        -------
+        tuple
+            (success: bool, message: str) Always returns (True, "OK").
+        """
+        
         url = self.mw_server.url_for_icon(name)
         self.mw_leds.load_from_url(url)
         return True, "OK"
 
     def set_screen(self, image=None, video=None, text=None, url=None):
+        """
+        Update the onboard screen with an image, video, text, or URL.
+
+        Parameters
+        ----------
+        image : str, optional
+            Image file name. Defaults to None.
+        video : str, optional
+            Video file name. Defaults to None.
+        text : str, optional
+            Text to display. Defaults to None.
+        url : str, optional
+            URL to display. Defaults to None.
+
+        Returns
+        -------
+        tuple
+            (success: bool, message: str) Always returns (True, "OK").
+        """
         if image != "":
             url = self.mw_server.url_for_image(image)
             self.mw_onboard.image = url
@@ -191,10 +490,27 @@ class Robot:
         return True, "OK"
 
     def reboot(self):
+        """
+        Reboot the robot.
+
+        Returns
+        -------
+        tuple
+            (success: bool, message: str) Always returns (True, "OK").
+        """
+
         self.mw_power.reboot = True
         return True, "OK"
 
     def shutdown(self):
+        """
+        Shutdown the robot.
+
+        Returns
+        -------
+        tuple
+            (success: bool, message: str) Always returns (True, "OK").
+        """
         self.mw_power.shutdown = True
         return True, "OK"
 
@@ -228,7 +544,7 @@ def command():
                 success, message = robot.enable_blush(control)
             if name == "change_mode":
                 success, message = robot.enable_change_mode(control)
-            return jsonify({ "success": True, "message": "OK" })
+            return jsonify({"success": True, "message": "OK"})
         elif op == "set_pan_torque":
             control = req["control"]
             success, message = robot.set_pan_torque(control)
@@ -269,11 +585,15 @@ def command():
             success, message = robot.reboot()
         elif op == "shutdown":
             success, message = robot.shutdown()
+        elif op == "manual_prompt":
+            robot.mw_onboard.speech = "Can you tell me the capital of spain?"
         else:
-            return jsonify({ "success": False, "message": "%s is not a recognized operation" % op })
-        return jsonify({ "success": success, "message": message })
+            return jsonify(
+                {"success": False, "message": "%s is not a recognized operation" % op}
+            )
+        return jsonify({"success": success, "message": message})
     except Exception as e:
-        return jsonify({ "success": False, "message": str(e) })
+        return jsonify({"success": False, "message": str(e)})
 
 
 def quick_connect():
@@ -281,10 +601,7 @@ def quick_connect():
     mw_server = mw.Server()
     udp_ip = "0.0.0.0"
     udp_port = mw_server.udp_port
-    response_str = "iamarobot;elmo;%s;%d" % (
-        mw_robot.name,
-        mw_server.api_port
-    )
+    response_str = "iamarobot;elmo;%s;%d" % (mw_robot.name, mw_server.api_port)
     response = response_str.encode()
 
     running = False
@@ -305,12 +622,14 @@ def quick_connect():
             pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     udp_server_thread = threading.Thread(target=quick_connect)
-    udp_server_thread.setDaemon(True)
+    udp_server_thread.daemon = True
     udp_server_thread.start()
-    server_thread = threading.Thread(target=lambda: app.run(host="0.0.0.0", port=SERVER_PORT))
-    server_thread.setDaemon(True)
+    server_thread = threading.Thread(
+        target=lambda: app.run(host="0.0.0.0", port=SERVER_PORT)
+    )
+    server_thread.daemon = True
     server_thread.start()
     node = mw.Node("robot_api")
     try:

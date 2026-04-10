@@ -1,0 +1,21 @@
+[project]
+name = "elmo-v2"
+version = "2.1.0"
+description = "Develop applications for IDMind's tabletop robot Elmo."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "adafruit-circuitpython-mpr121>=2.1.25",
+    "flask>=3.1.2",
+    "numpy==2.2.6",
+    "picamera2>=0.3.33",
+    "pillow>=12.0.0",
+    "psutil>=7.1.3",
+    "pyserial>=3.5",
+    "redis>=7.1.0",
+    "requests>=2.32.5",
+    "flask-cors>=4.0.0",
+    "opencv-python>=4.12",
+    "pyzbar>=0.1.9",
+]
+classifiers = ["Private :: Do Not Upload"]

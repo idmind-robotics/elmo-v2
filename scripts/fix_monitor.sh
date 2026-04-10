@@ -1,6 +1,5 @@
 #! /bin/bash
 
-ORIENTATION=left
 
 export DISPLAY=:0
 
@@ -16,11 +15,11 @@ while true; do
     fi
 done
 
-# sleep 5
-# echo "Rotating display"
-# /usr/bin/xrandr --output HDMI-1 --rotate $ORIENTATION
+sleep 5
+echo "Rotating display"
+/usr/bin/xrandr --output HDMI-1 --rotate left
 
 echo "Mapping input device to display"
-/usr/bin/xinput map-to-output "WaveShare WaveShare" "HDMI-1"
+/usr/bin/xinput map-to-output 8 "HDMI-1"
 
 echo "Done"
