@@ -106,7 +106,7 @@ class BehaviourBlush:
                 time.sleep(1.0 / LOOP_RATE)
                 if cooldown_counter > 0:
                     cooldown_counter -= 1
-                if self.behaviours.blush and self.touch_sensors.head_touch():
+                if self.behaviours.blush and self.touch_sensors.head_touch() and not self.behaviours.photographer:
                     if touch_counter < TOUCH_COUNTER_THRESHOLD:
                         touch_counter += 1
                     if touch_counter == TOUCH_COUNTER_THRESHOLD:

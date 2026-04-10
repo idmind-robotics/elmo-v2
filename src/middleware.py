@@ -54,7 +54,10 @@ def get_key(key):
     any
         The Python object stored in Redis under the given key.
     """
-    return json.loads(connection.get(key))
+    val = connection.get(key)
+    if val is None:
+        return None
+    return json.loads(val)
 
 
 def has_key(key):
@@ -1120,9 +1123,10 @@ class Behaviours(DBEntry):
         "test_motors": False,
         "blush": True,
         "conversation": False,
-        "photographer": False,
+        "photographer": True,
         "akinator": False,
         "wifi_connect": False,
+        "face_detection": True,
     }
 
     def list_behaviours(self):
