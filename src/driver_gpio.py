@@ -14,10 +14,28 @@ import middleware as mw
 
 
 class DriverGpio:
+    """
+    Middleware driver node for Raspberry Pi GPIO control.
+
+    Attributes
+    ----------
+    node : mw.Node
+        Middleware node used for shutdown state and logging.
+    gpio : mw.GPIO
+        Middleware GPIO state object with pin assignments and control flags.
+    chip : int
+        `lgpio` GPIO chip handle for GPIO operations.
+    """
     def __init__(self):
         """
-        Connect to middleware.
-        Initialize node.
+        Connect to middleware and configure GPIO pins.
+
+        Side effects
+        ------------
+        - Opens `/dev/gpiochip0` via `lgpio.gpiochip_open(0)`.
+        - Claims input and output pins via `lgpio`.
+        - Sets audio and monitor outputs HIGH initially.
+        - Logs initialization info.
         """
         self.node = mw.Node("driver_gpio")
         self.gpio = mw.GPIO()
@@ -38,7 +56,16 @@ class DriverGpio:
 
     def enable_audio(self, control):
         """
-        Enable or disable the audio power.
+        Enable or disable audio power output.
+
+        Parameters
+        ----------
+        control : bool
+            True to enable audio, False to disable.
+
+        Returns
+        -------
+        None
         """
         if control:
             self.node.loginfo("gpio: audio ON")
@@ -49,7 +76,16 @@ class DriverGpio:
 
     def enable_monitor(self, control):
         """
-        Enable or disable the monitor power.
+        Enable or disable monitor power output.
+
+        Parameters
+        ----------
+        control : bool
+            True to enable monitor, False to disable.
+
+        Returns
+        -------
+        None
         """
         if control:
             self.node.loginfo("gpio: monitor ON")
@@ -60,7 +96,21 @@ class DriverGpio:
 
     def run(self):
         """
-        Main loop.
+        Main loop that syncs middleware GPIO state with actual pin outputs.
+
+        Behavior
+        --------
+        - Marks `gpio.ready` True.
+        - Polls every 0.1 second.
+        - Updates audio and monitor outputs against middleware flags.
+        - Reads button press state and updates `gpio.button_pressed`.
+        - (Shutdown pin handling is commented out.)
+        - On exit, disables audio/monitor, closes the chip, and shuts down node.
+        - Handles KeyboardInterrupt gracefully.
+
+        Returns
+        -------
+        None
         """
         try:
             self.gpio.ready = True

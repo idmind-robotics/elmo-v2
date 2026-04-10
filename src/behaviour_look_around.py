@@ -17,10 +17,23 @@ MAX_SLEEP = 4.0
 
 
 class BehaviourLookAround:
+    """
+    Middleware behaviour to move pan/tilt servos randomly when enabled.
+
+    Attributes
+    ----------
+    node : mw.Node
+        Middleware node for shutdown and logging.
+    behaviours : mw.Behaviours
+        Middleware flags controlling enabled behaviours.
+    pan : mw.Pan
+        Middleware pan servo state object.
+    tilt : mw.Tilt
+        Middleware tilt servo state object.
+    """
     def __init__(self):
         """
-        Connect to middleware.
-        Initialize node.
+        Initialize middleware objects and behaviour node.
         """
         self.node = mw.Node("behaviour_look_around")
         self.behaviours = mw.Behaviours()
@@ -29,7 +42,20 @@ class BehaviourLookAround:
 
     def run(self):
         """
-        Main loop.
+        Main behaviour loop for random head movement.
+
+        Behavior
+        --------
+        - Waits until pan and tilt are ready via `pan.ready` and `tilt.ready`.
+        - Enables torque and starts random motion when `behaviours.look_around` is True.
+        - Disables torque and resets angles when behaviour is turned off.
+        - Chooses random target angles within ±MAX_RANGE and clamps to min/max limits.
+        - Sleeps a random interval between MIN_SLEEP and MAX_SLEEP between moves.
+        - Shuts down middleware node in finally block.
+
+        Returns
+        -------
+        None
         """
         try:
             self.node.loginfo("waiting for pan and tilt to be ready")

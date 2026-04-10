@@ -13,6 +13,19 @@ picam2.start()
 
 
 def generate_frames():
+    """
+    Generator yielding multipart JPEG frames from the camera.
+
+    This function captures a single JPEG frame from the Picamera2 instance,
+    encodes it in multipart response format, and yields it repeatedly.
+    It sleeps 0.01 seconds between frames to limit CPU usage and frame rate.
+
+    Returns
+    -------
+    generator
+        Yields bytes objects in MJPEG stream frame format:
+        --frame\r\nContent-Type: image/jpeg\r\n\r\n<jpeg_data>\r\n
+    """
     while True:
         buffer = io.BytesIO()
         picam2.capture_file(buffer, format="jpeg")
@@ -24,6 +37,15 @@ def generate_frames():
 
 @app.route("/video")
 def video():
+    """
+    Flask route handler returning streaming MJPEG response.
+
+    Returns
+    -------
+    flask.Response
+        HTTP response with MIME type multipart/x-mixed-replace, streaming
+        frames from `generate_frames`.
+    """
     return Response(
         generate_frames(), mimetype="multipart/x-mixed-replace; boundary=frame"
     )

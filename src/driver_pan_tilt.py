@@ -19,10 +19,34 @@ TEMPERATURE_INTERCEPT = -79.47
 
 
 class DriverPanTilt:
+    """
+    Middleware driver node for pan/tilt Herkulex servos.
+
+    Attributes
+    ----------
+    pan : mw.Pan
+        Middleware pan state object with PID, angle, enable and limits.
+    tilt : mw.Tilt
+        Middleware tilt state object with PID, angle, enable and limits.
+    node : mw.Node
+        Middleware node used for shutdown logic and logging.
+    servo_pan : hx.servo (set in connect)
+        Herkulex servo object for pan actuator.
+    servo_tilt : hx.servo (set in connect)
+        Herkulex servo object for tilt actuator.
+    error_count : int
+        Error counter used during main loop.
+    connected : bool
+        Connection status indicator.
+    """
     def __init__(self):
         """
-        Connect to middleware.
-        Initialize node.
+        Initialize middleware objects and driver node.
+
+        Side effects
+        ------------
+        - Creates pan and tilt middleware objects.
+        - Creates middleware node `driver_pan_tilt`.
         """
         self.pan = mw.Pan()
         self.tilt = mw.Tilt()
@@ -30,7 +54,14 @@ class DriverPanTilt:
 
     def connect(self):
         """
-        Connect to servos.
+        Connect to Herkulex bus and servos.
+
+        Behavior
+        --------
+        - Opens UART at `/dev/serial0, 115200`.
+        - Clears previous Herkulex errors.
+        - Connects pan and tilt servos with configured IDs.
+        - Logs each step.
         """
         pan_id = self.pan.id
         tilt_id = self.tilt.id
@@ -50,7 +81,21 @@ class DriverPanTilt:
 
     def run(self):
         """
-        Main loop.
+        Main control loop for pan and tilt servos.
+
+        Behavior
+        --------
+        - Ensures servos are connected and sets `pan.ready` and `tilt.ready`.
+        - Polls every cycle to tune PID gains, torque state, and commanded angles.
+        - Clamps target angle to servo limits and computes motion-based playtime.
+        - Reads actual servo angle and computes temperature from raw sensor.
+        - Clears Herkulex errors on `IndexError`.
+        - Logs and handles hardware errors, then gracefully shuts down in `finally`.
+        - `hx.close()` called during cleanup.
+
+        Returns
+        -------
+        None
         """
         try:
             self.error_count = 0
