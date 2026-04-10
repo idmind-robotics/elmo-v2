@@ -18,29 +18,10 @@ COOLDOWN = 2 * LOOP_RATE
 
 
 class BehaviourBlush:
-    """
-    Middleware behaviour that triggers a "blush" animation on touch.
-
-    Attributes
-    ----------
-    touch_sensors : mw.TouchSensors
-        Middleware touch sensor state used to detect head touches.
-    leds : mw.Leds
-        Middleware LED controller for icon/animation display.
-    onboard : mw.Onboard
-        Middleware onboard display controller for images.
-    speakers : mw.Speakers
-        Middleware speaker controller for playing sounds.
-    behaviours : mw.Behaviours
-        Middleware behaviour configuration flags.
-    server : mw.Server
-        Middleware server helper for resource URLs.
-    node : mw.Node
-        Middleware node used for shutdown and logging.
-    """
     def __init__(self):
         """
-        Initialize middleware objects and behaviour node.
+        Connect to middleware.
+        Initialize node.
         """
         self.touch_sensors = mw.TouchSensors()
         self.leds = mw.Leds()
@@ -52,18 +33,8 @@ class BehaviourBlush:
 
     def blush(self):
         """
-        Execute blush behaviour routine.
-
-        Behavior
-        --------
-        - Logs blushing activity.
-        - Stores previous LED icon URL.
-        - Sets onboard image to "love.png".
-        - Plays "love.wav" via speakers.
-        - Loads "heartbeat.gif" into LEDs.
-        - Waits 5 seconds.
-        - Restores onboard image and previous LEDs icon URL.
-        - Assumes middleware fields are set and available.
+        Blush routine.
+        Updates the onboard image, plays a sound and changes the leds.
         """
         self.node.loginfo("blushing")
         previous_icon_url = self.leds.url
@@ -82,21 +53,7 @@ class BehaviourBlush:
 
     def run(self):
         """
-        Main behaviour loop.
-
-        Behavior
-        --------
-        - Logs startup.
-        - Polls at `LOOP_RATE`.
-        - Checks `behaviours.blush` and head touch events.
-        - Uses touch count threshold (`TOUCH_COUNTER_THRESHOLD`) and cooldown
-          (`COOLDOWN`) to avoid repeated trigger.
-        - Calls `blush()` when conditions are met.
-        - Always shuts down node in finally block.
-
-        Returns
-        -------
-        None
+        Main loop.
         """
         try:
             self.node.loginfo("starting behaviour")

@@ -15,32 +15,7 @@ LOOP_RATE = 10
 
 
 class BehaviourWifiConnect:
-    """
-    Middleware behaviour that scans camera frames for WiFi QR codes and connects.
-
-    Attributes
-    ----------
-    onboard : mw.Onboard
-        Middleware onboard display for status text/image.
-    camera : mw.Camera
-        Middleware camera source object with `url`.
-    behaviours : mw.Behaviours
-        Middleware flags controlling behaviours (wifi_connect, look_around, conversation, etc.).
-    server : mw.Server
-        Middleware server helper for URL building.
-    leds : mw.Leds
-        Middleware LEDs state object (unused directly in this code path).
-    node : mw.Node
-        Middleware node used for shutdown and logging.
-    look_around_was_enabled : bool
-        Saved state of look_around behaviour before wifi connect mode.
-    conversation_was_enabled : bool
-        Saved state of conversation behaviour before wifi connect mode.
-    """
     def __init__(self):
-        """
-        Initialize behaviour and related middleware objects.
-        """
         self.onboard = mw.Onboard()
         self.camera = mw.Camera()
         self.behaviours = mw.Behaviours()
@@ -51,9 +26,6 @@ class BehaviourWifiConnect:
         self.conversation_was_enabled = False
 
     def show_stream(self):
-        """
-        Switch to camera stream display and disable other behaviours temporarily.
-        """
         self.look_around_was_enabled = self.behaviours.look_around
         self.behaviours.look_around = False
         self.conversation_was_enabled = self.behaviours.conversation
@@ -61,9 +33,6 @@ class BehaviourWifiConnect:
         self.onboard.image = self.camera.url
 
     def hide_stream(self):
-        """
-        Restore onboard image and re-enable previous behaviours.
-        """
         self.onboard.image = None
         time.sleep(1.0)
         if self.look_around_was_enabled:
@@ -72,24 +41,6 @@ class BehaviourWifiConnect:
             self.behaviours.conversation = True
 
     def parse_wifi_qr(self, qr_string):
-        """
-        Parse a WiFi QR string into SSID and password.
-
-        Parameters
-        ----------
-        qr_string : str
-            QR code payload in `WIFI:T:WPA;S:SSID;P:PASSWORD;H:false;;` format.
-
-        Returns
-        -------
-        tuple[str, str]
-            (ssid, password)
-
-        Raises
-        ------
-        ValueError
-            If QR string is not a valid WiFi format.
-        """
         # Ensure it follows the WIFI QR code format
         if not qr_string.startswith("WIFI:") or not qr_string.endswith(";;"):
             raise ValueError("Invalid WiFi QR code format")
@@ -111,21 +62,6 @@ class BehaviourWifiConnect:
         return wifi_details["S"], wifi_details["P"]
 
     def try_connect_to_wifi(self, ssid, password):
-        """
-        Attempt to connect to a WiFi network using nmcli.
-
-        Parameters
-        ----------
-        ssid : str
-            WiFi network SSID.
-        password : str
-            WiFi network password.
-
-        Returns
-        -------
-        tuple[bool, str]
-            (success, message). On success, message is connected SSID; on failure, error text.
-        """
         print("Connecting to WiFi network %s. Password: %s" % (ssid, password))
         try:
             result = subprocess.run(
@@ -157,22 +93,6 @@ class BehaviourWifiConnect:
             return False, error_message
 
     def run(self):
-        """
-        Main loop for wifi connect behaviour.
-
-        Behavior
-        --------
-        - Tracks transition of `behaviours.wifi_connect`.
-        - Disables conflicting behaviours during wifi-connect mode.
-        - Reads camera frames, decodes QR codes, and attempts WiFi connection if valid.
-        - Updates onboard text for status/errors.
-        - Restores previous behaviours when wifi_connect is disabled.
-        - Always shuts down node in finally block.
-
-        Returns
-        -------
-        None
-        """
         try:
             self.node.loginfo("starting behaviour")
             was_enabled = False

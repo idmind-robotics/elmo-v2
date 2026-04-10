@@ -26,33 +26,7 @@ SENSITIVITY = 5
 
 
 class TouchCalibrator:
-    """
-    Calibrates and monitors touch sensors for detecting touch events.
-
-    This class continuously reads raw values from multiple touch sensors,
-    maintains a moving average for each sensor, and determines if a touch
-    event has occurred when recent values fall below the calculated lower bound.
-    The calibration window size and sensitivity threshold are configurable
-    via module-level constants.
-
-    Attributes
-    ----------
-    windows : dict[str, list[float]]
-        Buffers storing the recent raw values for each sensor channel.
-        Keys include 'chest', 'head_0' through 'head_4'.
-    touch_sensors : mw.TouchSensors
-        Instance of the TouchSensors middleware providing access to raw
-        sensor values and updating detected touch states.
-    node : mw.Node
-        Middleware Node for logging and shutdown handling.
-    """
     def __init__(self):
-        """
-        Initialize the TouchCalibrator.
-
-        Sets up empty moving average windows for each sensor channel,
-        initializes the touch sensor interface, and creates a logging node.
-        """
         self.windows = {
             "chest": [],
             "head_0": [],
@@ -65,36 +39,6 @@ class TouchCalibrator:
         self.node = mw.Node("touch_calibrator")
 
     def run(self):
-        """
-        Run the touch sensor calibration and monitoring loop.
-
-        The method performs three main steps:
-        1. Waits until the touch sensors are ready.
-        2. Collects initial samples to populate the moving average windows.
-        3. Continuously updates sensor readings, maintains the moving averages,
-           calculates upper and lower bounds, detects touch events, and updates
-           the sensor touch states.
-
-        Behavior and Assumptions
-        ------------------------
-        - The moving average window size is determined by the `WINDOW_SIZE` constant.
-        - Sensitivity for touch detection is determined by the `SENSITIVITY` constant.
-        - A touch is detected if the last three sensor readings are below the
-          lower bound of the moving average minus sensitivity.
-        - Logging is performed via the `node` object.
-        - The loop continues until the node is shut down.
-        - The method ensures proper shutdown of the node in all cases.
-
-        Side Effects
-        ------------
-        - Updates touch state attributes of `self.touch_sensors`.
-        - Logs information about calibration and detected touches.
-        - Sleeps intermittently (0.1 seconds) to reduce CPU usage.
-
-        Raises
-        ------
-        None explicitly; relies on `node.is_shutdown()` for termination.
-        """
         try:
             self.node.loginfo("waiting for touch sensors to be ready")
             while not self.node.is_shutdown():
