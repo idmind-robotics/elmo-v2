@@ -3,7 +3,7 @@ name = "elmo-v2"
 version = "2.1.0"
 description = "Develop applications for IDMind's tabletop robot Elmo."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = "==3.12.3"
 dependencies = [
     "adafruit-circuitpython-mpr121>=2.1.25",
     "flask>=3.1.2",
