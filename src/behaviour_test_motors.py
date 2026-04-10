@@ -27,23 +27,10 @@ ANGLES = [
 
 
 class BehaviourTestMotors:
-    """
-    Middleware behaviour node to exercise pan/tilt servos in a systematic pattern.
-
-    Attributes
-    ----------
-    node : mw.Node
-        Middleware node used for shutdown and logging.
-    behaviours : mw.Behaviours
-        Middleware behaviour flags.
-    pan : mw.Pan
-        Middleware pan servo state.
-    tilt : mw.Tilt
-        Middleware tilt servo state.
-    """
     def __init__(self):
         """
-        Initialize middleware objects and behaviour node.
+        Connect to middleware.
+        Initialize node.
         """
         self.node = mw.Node("behaviour_test_motors")
         self.behaviours = mw.Behaviours()
@@ -52,20 +39,7 @@ class BehaviourTestMotors:
 
     def run(self):
         """
-        Main loop that moves pan and tilt through fixed test angles when enabled.
-
-        Behavior
-        --------
-        - Waits for pan and tilt readiness (`pan.ready` and `tilt.ready`).
-        - When `behaviours.test_motors` becomes True, enables torque and cycles
-          through pre-defined `ANGLES`.
-        - When disabled, returns to center, disables torque after a brief pause.
-        - Sleeps `SLEEP` seconds between each move.
-        - Shuts down middleware node in finally block.
-
-        Returns
-        -------
-        None
+        Main loop.
         """
         try:
             self.node.loginfo("waiting for pan and tilt to be ready")
