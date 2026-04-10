@@ -3,10 +3,6 @@
 export DISPLAY=:0
 export XDG_RUNTIME_DIR=/run/user/1000
 
-exec > /tmp/kiosk.log 2>&1
-/bin/bash /home/idmind/elmo-v2/scripts/start.sh &
-
-
 # Wait for PipeWire and display to exist
 until pw-cli info 0 &>/dev/null; do
   echo "Waiting for PipeWire..."
