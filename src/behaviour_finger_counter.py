@@ -15,8 +15,9 @@ import time
 import cv2
 import numpy as np
 import mediapipe as mp
-import middleware as mw
 import threading
+
+import middleware as mw
 
 
 FRAME_W = 640
@@ -25,8 +26,33 @@ LOOP_RATE = 10
 
 
 class BehaviourFingerNumbers:
+    """
+    Middleware behaviour that counts raised fingers in real time using MediaPipe.
+
+    Attributes
+    ----------
+    node : mw.Node
+        Middleware node used for shutdown and logging.
+    result : mp.tasks.vision.HandLandmarkerResult or None
+        Most recent hand landmark result from the MediaPipe callback.
+    lock_result : threading.Lock
+        Lock protecting concurrent access to `result`.
+    landmarker : mp.tasks.vision.HandLandmarker
+        MediaPipe hand landmarker running in live stream mode.
+    stream : cv2.VideoCapture
+        MJPEG camera stream used as the video source.
+    latest_frame : numpy.ndarray or None
+        Most recent frame captured from the camera stream.
+    lock_frame : threading.Lock
+        Lock protecting concurrent access to `latest_frame`.
+    running : bool
+        Controls the camera reader thread loop.
+    """
 
     def __init__(self):
+        """
+        Initialize middleware node, MediaPipe hand landmarker, and camera stream.
+        """
         self.node = mw.Node("behaviour_finger_numbers")
 
         # mediapipe hand landmarker setup
@@ -58,6 +84,15 @@ class BehaviourFingerNumbers:
         self.node.loginfo("Camera ready.")
 
     def reader(self):
+        """
+        Background thread that continuously reads frames from the camera stream.
+
+        Behavior
+        --------
+        - Reads frames from the MJPEG stream in a tight loop.
+        - Stores the latest successfully decoded frame in `latest_frame`.
+        - Runs until `running` is set to False.
+        """
         while self.running:
             ret, frame = self.stream.read()
             if ret:
@@ -66,9 +101,24 @@ class BehaviourFingerNumbers:
 
     def count_fingers(self, hand_landmarks):
         """
-        Count raised fingers using landmark y positions.
-        Fingers: index=8, middle=12, ring=16, pinky=20
-        Thumb: uses x position comparison
+        Count raised fingers from a set of hand landmarks.
+
+        Behavior
+        --------
+        - For the four fingers (index, middle, ring, pinky): a finger is raised
+        if its tip y-coordinate is above all three joints below it.
+        - For the thumb: uses x-coordinate comparison relative to palm orientation
+        to detect whether the tip is extended.
+
+        Parameters
+        ----------
+        hand_landmarks : list
+            List of 21 normalized hand landmark objects from MediaPipe.
+
+        Returns
+        -------
+        int
+            Number of raised fingers (0–5).
         """
         count = 0
 
@@ -97,6 +147,20 @@ class BehaviourFingerNumbers:
         return count
 
     def run(self):
+        """
+        Main behaviour loop.
+
+        Behavior
+        --------
+        - Logs startup.
+        - Polls at `LOOP_RATE` for new camera frames.
+        - Sends each frame asynchronously to the MediaPipe landmarker.
+        - Reads the latest landmark result and counts raised fingers.
+        - Prints the finger count to the terminal only when it changes.
+        - Prints "No hand detected." when no hand is visible.
+        - Stops the camera reader, releases resources, and shuts down the node
+        in the finally block.
+        """
         self.node.loginfo("Behaviour started.")
         last_count = None
 
