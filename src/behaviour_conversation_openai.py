@@ -149,10 +149,10 @@ class BehaviourConversation:
                 self.reply("**TASK_PICTURE finished")
             if not linux:
                 try:
-                    # Transformamos a lista em uma string única
+                    # transforming a string into a list
                     vlc_command = 'echo "ABRIR_VLC" | nc -w 1 192.168.2.86 5000 && ffmpeg -re -i /home/idmind/elmo-v2/src/static/videos/eyes_green_all.mp4 -c:v libx264 -preset ultrafast -f mpegts -listen 1 http://0.0.0.0:8080'
                     
-                    # Executamos com shell=True
+                    # runnable with shell=True
                     subprocess.run(vlc_command, shell=True, check=False)
                 except Exception as e:
                     self.node.logwarn("failed to run video: %s" % e)
