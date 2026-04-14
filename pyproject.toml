@@ -3,7 +3,7 @@ name = "elmo-v2"
 version = "2.1.0"
 description = "Develop applications for IDMind's tabletop robot Elmo."
 readme = "README.md"
-requires-python = "==3.12.3"
+requires-python = ">=3.13"
 dependencies = [
     "adafruit-circuitpython-mpr121>=2.1.25",
     "flask>=3.1.2",
@@ -15,7 +15,9 @@ dependencies = [
     "redis>=7.1.0",
     "requests>=2.32.5",
     "flask-cors>=4.0.0",
-    "opencv-python>=4.12",
+    "opencv-contrib-python>=4.13.0.92",
     "pyzbar>=0.1.9",
+    "adafruit-blinka>=9.0.3",
+    "lgpio>=0.2.2.0",
 ]
 classifiers = ["Private :: Do Not Upload"]

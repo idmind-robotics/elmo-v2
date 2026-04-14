@@ -48,7 +48,7 @@ python motor_temperature_watchdog.py >> /home/idmind/elmo-v2/logs/motor_temperat
 
 python behaviour_blush.py >> /home/idmind/elmo-v2/logs/behaviour_blush.log &
 python behaviour_test_motors.py >> /home/idmind/elmo-v2/logs/behaviour_test_motors.log &
-# python behaviour_wifi_connect.py >> /home/idmind/elmo-v2/logs/behaviour_wifi_connect.log &
+python behaviour_wifi_connect.py >> /home/idmind/elmo-v2/logs/behaviour_wifi_connect.log &
 (sleep 8; python behaviour_photographer.py) >> /home/idmind/elmo-v2/logs/behaviour_photographer.log &
 (sleep 8; python behaviour_hello.py) >> /home/idmind/elmo-v2/logs/behaviour_hello.log &
 python behaviour_clock.py >> /home/idmind/elmo-v2/logs/behaviour_clock.log &
