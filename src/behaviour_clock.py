@@ -4,6 +4,7 @@ Behaviour node.
 
 When the chest is touched, the behaviour displays the current time
 and weather on the LED matrix using fade transitions.
+Only runs when behaviours.clock is True (set by the mode manager in idle mode).
 
 """
 
@@ -29,6 +30,8 @@ class BehaviourClock:
         Middleware node used for shutdown and logging.
     touch_sensors : mw.TouchSensors
         Middleware touch sensor state used to detect chest touches.
+    behaviours : mw.Behaviours
+        Middleware behaviour flags used to check if clock is enabled.
     """
 
     def __init__(self):
@@ -39,6 +42,7 @@ class BehaviourClock:
         self.server = mw.Server()
         self.node = mw.Node("behaviour_clock")
         self.touch_sensors = mw.TouchSensors()
+        self.behaviours = mw.Behaviours()
 
         global CITY
         CITY = self.get_city()
@@ -305,7 +309,7 @@ class BehaviourClock:
         --------
         - Logs startup.
         - Polls every 100ms for chest touch.
-        - Skips while blush behaviour is active.
+        - Skips while blush behaviour is active or behaviours.clock is False.
         - Triggers the clock/weather sequence on chest touch.
         - Always clears LEDs and shuts down node in finally block.
         """
@@ -314,6 +318,8 @@ class BehaviourClock:
             while not self.get_key(self.node.name + "is_shutdown"):
                 time.sleep(0.1)
                 if self.is_blush_active():
+                    continue
+                if not self.behaviours.clock:
                     continue
                 if self.touch_sensors.touch_chest:
                     self.sequence()

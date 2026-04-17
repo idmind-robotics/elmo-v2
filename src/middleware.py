@@ -1262,12 +1262,13 @@ class Behaviours(DBEntry):
     fields = {
         "look_around": False,
         "test_motors": False,
-        "blush": True,
+        "blush": False,
+        "clock": False,
         "conversation": False,
-        "photographer": True,
+        "photographer": False,
         "akinator": False,
         "wifi_connect": False,
-        "face_detection": True,
+        "face_detection": False,
     }
 
     def list_behaviours(self):
