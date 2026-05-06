@@ -22,4 +22,5 @@ echo "Rotating display"
 echo "Mapping input device to display"
 /usr/bin/xinput map-to-output 8 "HDMI-1"
 
+#
 echo "Done"
