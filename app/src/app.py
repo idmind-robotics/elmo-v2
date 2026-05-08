@@ -95,7 +95,7 @@ class Window(QMainWindow, Ui_MainWindow):
         super().__init__(parent)
         self.setupUi(self)
         self.show()
-        self.setWindowTitle("Elmo V2")
+        self.setWindowTitle("TAGI App")
 
         self.initialize_leds()
         self.initialize_motors()
@@ -107,10 +107,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.log("Application running.")
 
         # scan robots on startup
-        robot_client.set_robot_model("elmo")
+        robot_client.set_robot_model("tagi")
         self.client = None
         self.scan_network.clicked.connect(self.scan_robots)
-        self.reboot.clicked.connect(self.do_reboot)
         self.shutdown.clicked.connect(self.do_shutdown)
         self.scan_robots()
         self.update()
@@ -142,11 +141,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.dialog = dialog
         dialog.exec_()
         robot_client.stop_scan()
-    
-    def do_reboot(self):
-        if self.client is not None:
-            if QMessageBox.Ok == QMessageBox.warning(self, "Confirm", "Reboot?", buttons=QMessageBox.Ok | QMessageBox.Cancel):
-                self.client.send_command("reboot")
 
     def do_shutdown(self):
         if self.client is not None:
@@ -174,9 +168,6 @@ class Window(QMainWindow, Ui_MainWindow):
                     palette.green(),
                     palette.blue(),
                 ))
-        # mirror leds horizontally
-        # leds = [leds[i:i+13][::-1] for i in range(0, len(leds), 13)]
-
         self.client.send_command("update_leds", colors=leds)
 
     def initialize_leds(self):
@@ -251,6 +242,18 @@ class Window(QMainWindow, Ui_MainWindow):
         self.leds_none.clicked.connect(clear_all)
 
     def initialize_motors(self):
+        def update_motor_limits():
+            def f():
+                if QMessageBox.Ok == QMessageBox.warning(self, "Confirm", "Update motor limits?", buttons=QMessageBox.Ok | QMessageBox.Cancel):
+                    self.client.send_command(
+                        "update_motor_limits",
+                        pan_min=self.motors_set_pan_min.value(),
+                        pan_max=self.motors_set_pan_max.value(),
+                        tilt_min=self.motors_set_tilt_min.value(),
+                        tilt_max=self.motors_set_tilt_max.value()
+                    )
+            return f
+        self.motors_update_limits.clicked.connect(update_motor_limits())
         self.motors_pan.sliderReleased.connect(lambda: self.client.send_command("set_pan", angle=self.motors_pan.value()))
         self.motors_tilt.sliderReleased.connect(lambda: self.client.send_command("set_tilt", angle=self.motors_tilt.value()))
         self.motors_pan_torque_on.clicked.connect(lambda: self.client.send_command("set_pan_torque", control=True))
@@ -265,9 +268,12 @@ class Window(QMainWindow, Ui_MainWindow):
         def enable_blush(checked):
             self.client.send_command("enable_behaviour", name="blush", control=checked)
         self.behaviour_blush.stateChanged.connect(enable_blush)
-        def enable_change_mode(checked):
-            self.client.send_command("enable_behaviour", name="change_mode", control=checked)
-        self.behaviour_change_mode.stateChanged.connect(enable_change_mode)
+        def enable_conversation(checked):
+            self.client.send_command("enable_behaviour", name="conversation", control=checked)
+        self.behaviour_conversation.stateChanged.connect(enable_conversation)
+        def enable_photographer(checked):
+            self.client.send_command("enable_behaviour", name="photographer", control=checked)
+        self.behaviour_photographer.stateChanged.connect(enable_photographer)
 
     def initialize_audio(self):
         self.sound_list = []
@@ -379,24 +385,40 @@ class Window(QMainWindow, Ui_MainWindow):
             # print(self.client.__dict__)
             self.client.update_status()
             try:
-                self.battery.setText(f'Battery: %.2f V (%d%%)' % (self.client.battery, self.client.battery_percentage))
+                self.battery.setText(f'Battery: %.2f V' % self.client.battery)
                 self.motors_pan.setRange(self.client.pan_min, self.client.pan_max)
                 self.motors_pan_min.setNum(self.client.pan_min)
                 self.motors_pan_max.setNum(self.client.pan_max)
-                # self.motors_pan_value.setNum(self.client.pan)
-                self.motors_pan_value.setText("%.2f" % self.client.pan)
+                self.motors_pan_value.setNum(self.client.pan)
                 self.motors_pan_torque.setChecked(self.client.pan_torque)
                 self.motors_tilt.setRange(self.client.tilt_min, self.client.tilt_max)
                 self.motors_tilt_min.setNum(self.client.tilt_min)
                 self.motors_tilt_max.setNum(self.client.tilt_max)
-                # self.motors_tilt_value.setNum(self.client.tilt)
-                self.motors_tilt_value.setText("%.2f" % self.client.tilt)
+                self.motors_tilt_value.setNum(self.client.tilt)
                 self.motors_tilt_torque.setChecked(self.client.tilt_torque)
                 self.touch_chest.setChecked(self.client.touch_chest)
                 self.touch_head_n.setChecked(self.client.touch_head_n)
                 self.touch_head_s.setChecked(self.client.touch_head_s)
                 self.touch_head_e.setChecked(self.client.touch_head_e)
                 self.touch_head_w.setChecked(self.client.touch_head_w)
+                self.touch_head_c.setChecked(self.client.touch_head_c)
+                if hasattr(self.client, 'touch_head'):
+                    self.touch_head.setChecked(self.client.touch_head)
+                # Update touch sensor values if available
+                if hasattr(self.client, 'touch_chest_value'):
+                    self.touch_chest_value.setText(str(self.client.touch_chest_value))
+                if hasattr(self.client, 'touch_head_n_value'):
+                    self.touch_head_n_value.setText(str(self.client.touch_head_n_value))
+                if hasattr(self.client, 'touch_head_s_value'):
+                    self.touch_head_s_value.setText(str(self.client.touch_head_s_value))
+                if hasattr(self.client, 'touch_head_e_value'):
+                    self.touch_head_e_value.setText(str(self.client.touch_head_e_value))
+                if hasattr(self.client, 'touch_head_w_value'):
+                    self.touch_head_w_value.setText(str(self.client.touch_head_w_value))
+                if hasattr(self.client, 'touch_head_c_value'):
+                    self.touch_head_c_value.setText(str(self.client.touch_head_c_value))
+                if hasattr(self.client, 'touch_head_value'):
+                    self.touch_head_value.setText(str(self.client.touch_head_value))
                 if self.client.icon_list != self.icon_list:
                     self.leds_icon_list.clear()
                     self.leds_icon_list.addItems(self.client.icon_list)

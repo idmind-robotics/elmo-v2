@@ -1,4 +1,5 @@
 #! /bin/bash
 
 ./rebuild_ui.sh
-python3 app.py
+source /home/luckin/Documents/elmo-v2-idmind/app/.venv/bin/activate
+uv run src/uv app.py
