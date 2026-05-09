@@ -19,40 +19,46 @@ until redis-cli ping >/dev/null 2>&1; do
 done
 echo "Redis is ready!"
 
-# create log folder, if it doesn't exist
-mkdir -p /home/idmind/logs
+# Ensure hostnames
+grep -q "127.0.0.1 elmo" /etc/hosts || echo "127.0.0.1 elmo" | sudo tee -a /etc/hosts
+grep -q "127.0.0.1 elmo2" /etc/hosts || echo "127.0.0.1 elmo2" | sudo tee -a /etc/hosts
 
-
-# Activate virtual environment
-source /home/idmind/elmo-v2/.venv/bin/activate
+mkdir -p /home/idmind/elmo-v2/logs
 
 cd /home/idmind/elmo-v2/src
+source /home/idmind/elmo-v2/.venv/bin/activate
+python middleware.py reset > /dev/null
+python load_config.py > /dev/null
+
+python driver_battery.py >> /home/idmind/elmo-v2/logs/driver_battery.log &
+python driver_gpio.py >> /home/idmind/elmo-v2/logs/driver_gpio.log &
+sudo -n /home/idmind/elmo-v2/.venv/bin/python driver_leds.py >> /home/idmind/elmo-v2/logs/driver_leds.log &
+# python driver_microphone.py >> /home/idmind/elmo-v2/logs/driver_microphone.log &
+python driver_pan_tilt.py >> /home/idmind/elmo-v2/logs/driver_pan_tilt.log &
+python driver_power.py >> /home/idmind/elmo-v2/logs/driver_power.log &
+python driver_speakers.py >> /home/idmind/elmo-v2/logs/driver_speakers.log &
+# python driver_speech.py >> /home/idmind/elmo-v2/logs/driver_speech.log &
+python driver_touch_sensors.py >> /home/idmind/elmo-v2/logs/driver_touch_sensors.log &
+
+python http_server.py >> /home/idmind/elmo-v2/logs/http_server.log &
+python robot_api.py >> /home/idmind/elmo-v2/logs/robot_api.log &
+python touch_calibrator.py >> /home/idmind/elmo-v2/logs/touch_calibrator.log &
+python mjpeg_server_2.py >> /home/idmind/elmo-v2/logs/mjpeg_server_2.log &
+python motor_temperature_watchdog.py >> /home/idmind/elmo-v2/logs/motor_temperature_watchdog.log &
+
+python behaviour_blush.py >> /home/idmind/elmo-v2/logs/behaviour_blush.log &
+python behaviour_test_motors.py >> /home/idmind/elmo-v2/logs/behaviour_test_motors.log &
+python behaviour_wifi_connect.py >> /home/idmind/elmo-v2/logs/behaviour_wifi_connect.log &
+(sleep 8; python behaviour_photographer.py) >> /home/idmind/elmo-v2/logs/behaviour_photographer.log &
+(sleep 8; python behaviour_hello.py) >> /home/idmind/elmo-v2/logs/behaviour_hello.log &
+python behaviour_clock.py >> /home/idmind/elmo-v2/logs/behaviour_clock.log &
+python behaviour_ouch.py >> /home/idmind/elmo-v2/logs/behaviour_ouch.log &
+
+python sleep_mode.py >> /home/idmind/elmo-v2/logs/sleep_mode.log &
+
+(sleep 5; python mode_manager.py >> /home/idmind/elmo-v2/logs/mode_manager.log) &
 
 
-uv run middleware.py reset
-uv run load_config.py
-
-uv run driver_battery.py >> /home/idmind/logs/driver_battery.log &
-uv run driver_gpio.py >> /home/idmind/logs/driver_gpio.log &
-sudo /usr/bin/python driver_leds.py &
-uv run driver_microphone.py >> /home/idmind/logs/driver_microphone.log &
-uv run driver_pan_tilt.py >> /home/idmind/logs/driver_pan_tilt.log &
-uv run driver_power.py >> /home/idmind/logs/driver_power.log &
-uv run driver_speakers.py >> /home/idmind/logs/driver_speakers.log &
-uv run driver_speech.py >> /home/idmind/logs/driver_speech.log &
-/usr/bin/python driver_touch_sensors.py >> /home/idmind/logs/driver_touch_sensors.log &
-
-uv run http_server.py >> /home/idmind/logs/http_server.log &
-uv run robot_api.py >> /home/idmind/logs/robot_api.log &
-uv run touch_calibrator.py >> /home/idmind/logs/touch_calibrator.log &
-/usr/bin/python mjpeg_server_2.py >> /home/idmind/logs/mjpeg_server_2.log &
-uv run motor_temperature_watchdog.py >> /home/idmind/logs/motor_temperature_watchdog.log &
-
-uv run behaviour_blush.py >> /home/idmind/logs/behaviour_blush.log &
-uv run behaviour_look_around.py >> /home/idmind/logs/behaviour_look_around.log &
-uv run behaviour_test_motors.py >> /home/idmind/logs/behaviour_test_motors.log &
-uv run behaviour_wifi_connect.py >> /home/idmind/logs/behaviour_wifi_connect.log &
-
-sleep 5
-uv run mode_manager.py >> /home/idmind/logs/mode_manager.log &
-
+sleep 2
+exec > /tmp/kiosk.log 2>&1
+/bin/bash /home/idmind/elmo-v2/scripts/start_webapp.sh &
