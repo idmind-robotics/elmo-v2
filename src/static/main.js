@@ -180,3 +180,7 @@ const logerror = (msg) => {
         })
     });
 };
+
+document.addEventListener("touchstart", () => {
+    fetch("api/touch", { method: "POST" });
+});
