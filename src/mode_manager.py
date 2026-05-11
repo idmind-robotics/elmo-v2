@@ -42,6 +42,7 @@ class ModeManager:
         self.behaviours.photographer = False
         self.behaviours.akinator = False
         self.behaviours.wifi_connect = False
+        self.behaviours.blush = True
 
     def conversation_mode(self):
         self.node.loginfo("conversation mode")
@@ -49,6 +50,7 @@ class ModeManager:
         self.behaviours.photographer = False
         self.behaviours.akinator = False
         self.behaviours.wifi_connect = False
+        self.behaviours.blush = False
 
     def photographer_mode(self):
         self.node.loginfo("photographer mode")
@@ -56,6 +58,7 @@ class ModeManager:
         self.behaviours.photographer = True
         self.behaviours.akinator = False
         self.behaviours.wifi_connect = False
+        self.behaviours.blush = False
 
     def akinator_mode(self):
         self.node.loginfo("akinator mode")
@@ -63,6 +66,7 @@ class ModeManager:
         self.behaviours.photographer = False
         self.behaviours.akinator = True
         self.behaviours.wifi_connect = False
+        self.behaviours.blush = False
 
     def wifi_connect_mode(self):
         self.node.loginfo("wifi connect mode")
@@ -70,6 +74,7 @@ class ModeManager:
         self.behaviours.photographer = False
         self.behaviours.akinator = False
         self.behaviours.wifi_connect = True
+        self.behaviours.blush = False
 
     def highlight_mode(self, mode):
         url = self.server.url_for_icon(self.icons[mode])
