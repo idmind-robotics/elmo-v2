@@ -40,28 +40,29 @@ class BehaviourBlush:
     then owns the display, LEDs, and speaker for the full animation.
     sleep_mode yields the display while behaviour_blush_active is True.
 
-    Attributes
-    ----------
-    touch_sensors : mw.TouchSensors
-        Middleware touch sensor state used to detect head touches.
-    leds : mw.Leds
-        Middleware LED controller for icon/animation display.
-    onboard : mw.Onboard
-        Middleware onboard display controller for images and videos.
-    speakers : mw.Speakers
-        Middleware speaker controller for playing sounds.
-    behaviours : mw.Behaviours
-        Middleware behaviour configuration flags.
-    server : mw.Server
-        Middleware server helper for resource URLs.
-    node : mw.Node
-        Middleware node used for shutdown and logging.
-    url_open : str
-        Pre-resolved URL for the open eyes static image.
-    video_urls : dict
-        Pre-resolved URLs for each blush transition video, keyed by eye state.
-    video_durations : dict
-        Fallback durations in seconds for each video, keyed by eye state.
+    > ## Attributes
+
+    ``touch_sensors : mw.TouchSensors`` : Middleware touch sensor state used to detect head touches.
+
+    ``leds : mw.Leds`` : Middleware LED controller for icon/animation display.
+
+    ``onboard : mw.Onboard`` : Middleware onboard display controller for images and videos.
+
+    ``speakers : mw.Speakers`` : Middleware speaker controller for playing sounds.
+
+    ``behaviours : mw.Behaviours`` : Middleware behaviour configuration flags.
+
+    ``server : mw.Server`` : Middleware server helper for resource URLs.
+
+    ``node : mw.Node`` : Middleware node used for shutdown and logging.
+
+    ``url_open : str`` : Pre-resolved URL for the open eyes static image.
+
+    ``video_urls : dict`` : Pre-resolved URLs for each blush transition video, keyed by eye state.
+
+    ``video_durations : dict`` : Fallback durations in seconds for each video, keyed by eye state.
+
+    > ## Functions
     """
 
     def __init__(self):
