@@ -1,6 +1,6 @@
 """
 
-Middleware.
+Middleware tool node.
 
 Central Redis-backed state layer shared between all driver and behaviour nodes.
 
