@@ -20,18 +20,21 @@ class BehaviourClock:
     """
     Middleware behaviour that displays a clock and weather sequence on touch.
 
-    Attributes
-    ----------
-    leds : mw.Leds
-        Middleware LED controller for drawing and animation.
-    server : mw.Server
-        Middleware server helper for resource URLs.
-    node : mw.Node
-        Middleware node used for shutdown and logging.
-    touch_sensors : mw.TouchSensors
-        Middleware touch sensor state used to detect chest touches.
-    behaviours : mw.Behaviours
-        Middleware behaviour flags used to check if clock is enabled.
+    > ## Attributes
+
+    ``leds : mw.Leds`` : Middleware LED controller for drawing and animation.
+
+    ``server : mw.Server`` : Middleware server helper for resource URLs.
+
+    ``node : mw.Node`` : Middleware node used for shutdown and logging.
+
+    ``touch_sensors : mw.TouchSensors`` : Middleware touch sensor state used to detect chest touches.
+
+    ``behaviours : mw.Behaviours`` : Middleware behaviour flags used to check if clock is enabled.
+
+    ``battery : mw.Battery`` : Middleware battery state used to read charge percentage.
+
+    > ## Functions
     """
 
     def __init__(self):
