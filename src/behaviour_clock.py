@@ -204,7 +204,7 @@ class BehaviourClock:
             return temp, icon
 
         except:
-            return "no_internet"
+            return 88, "no_internet"
 
     def generate_weather_image(self):
         """
