@@ -1,3 +1,13 @@
+"""
+
+Behaviour node.
+
+Enables WiFi QR code scanning through the robot's camera.
+Displays the camera stream on the onboard screen, detects WiFi QR codes,
+parses credentials, and attempts to connect to the network.
+
+"""
+
 import time
 import re
 import socket
@@ -18,7 +28,37 @@ LOOP_RATE = 10
 
 
 class BehaviourWifiConnect:
+    """
+    Middleware behaviour that scans WiFi QR codes and connects to networks.
+
+    Displays the camera feed on the onboard screen, uses both WeChat QR detector
+    and pyzbar for robust QR code detection, parses WiFi credentials in WIFI: format,
+    and connects to the network using NetworkManager (nmcli).
+
+    > ## Attributes
+
+    ``onboard : mw.Onboard`` : Middleware onboard display controller.
+
+    ``camera : mw.Camera`` : Middleware camera interface.
+
+    ``behaviours : mw.Behaviours`` : Middleware behaviour configuration flags.
+
+    ``server : mw.Server`` : Middleware server helper for resource URLs.
+
+    ``leds : mw.Leds`` : Middleware LED controller.
+
+    ``node : mw.Node`` : Middleware node used for shutdown and logging.
+
+    ``look_around_was_enabled : bool`` : Stores whether look_around behaviour was active before WiFi connect started.
+
+    ``conversation_was_enabled : bool`` : Stores whether conversation behaviour was active before WiFi connect started.
+
+    > ## Functions
+    """
     def __init__(self):
+        """
+        Initialize middleware objects and state tracking variables.
+        """
         self.onboard = mw.Onboard()
         self.camera = mw.Camera()
         self.behaviours = mw.Behaviours()
@@ -29,7 +69,21 @@ class BehaviourWifiConnect:
         self.conversation_was_enabled = False
 
     def read_frame(self):
-        """Read a single frame from the MJPEG server using a raw socket + Content-Length."""
+        """
+        Read a single frame from the MJPEG server using a raw socket + Content-Length.
+
+        Behavior
+        --------
+        - Opens a TCP socket connection to the local MJPEG stream server.
+        - Reads HTTP headers to extract Content-Length.
+        - Buffers data until complete JPEG frame is received.
+        - Decodes JPEG bytes into OpenCV image format.
+
+        Returns
+        -------
+        numpy.ndarray or None
+            Decoded BGR image frame, or None if read fails.
+        """
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(5)
@@ -63,7 +117,26 @@ class BehaviourWifiConnect:
         return None
 
     def detect_qr(self, frame):
-        """Try WeChat QR detector (handles circular/stylized dots) then fall back to pyzbar."""
+        """
+        Try WeChat QR detector (handles circular/stylized dots) then fall back to pyzbar.
+
+        Behavior
+        --------
+        - First attempts detection with WeChat QR code detector (handles fancy QR codes).
+        - Falls back to pyzbar with multiple preprocessing strategies if WeChat fails.
+        - Preprocessing includes: grayscale, upscaling, thresholding, CLAHE enhancement,
+          sharpening, inversion, and adaptive thresholding.
+
+        Parameters
+        ----------
+        frame : numpy.ndarray
+            BGR image frame from camera.
+
+        Returns
+        -------
+        list
+            List of detected QR code objects with .data attribute containing decoded bytes.
+        """
         # WeChat detector — handles fancy QR codes with circular dots
         try:
             detector = cv2.wechat_qrcode_WeChatQRCode()
@@ -99,6 +172,16 @@ class BehaviourWifiConnect:
         return []
 
     def show_stream(self):
+        """
+        Display camera stream on onboard screen and disable conflicting behaviours.
+
+        Behavior
+        --------
+        - Saves current state of look_around and conversation behaviours.
+        - Disables look_around to prevent head movement interference.
+        - Waits for behaviours to stop.
+        - Displays camera stream URL on onboard screen.
+        """
         self.look_around_was_enabled = self.behaviours.look_around
         self.behaviours.look_around = False
         self.conversation_was_enabled = self.behaviours.conversation
@@ -106,6 +189,15 @@ class BehaviourWifiConnect:
         self.onboard.image = self.camera.url
 
     def hide_stream(self):
+        """
+        Hide camera stream and restore previously active behaviours.
+
+        Behavior
+        --------
+        - Clears onboard image display.
+        - Waits for display to clear.
+        - Re-enables look_around and conversation behaviours if they were active before.
+        """
         self.onboard.image = None
         time.sleep(1.0)
         if self.look_around_was_enabled:
@@ -114,6 +206,31 @@ class BehaviourWifiConnect:
             self.behaviours.conversation = True
 
     def parse_wifi_qr(self, qr_string):
+        """
+        Parse WiFi credentials from QR code string in WIFI: format.
+
+        Behavior
+        --------
+        - Validates that string starts with "WIFI:".
+        - Extracts S (SSID), T (security type), P (password), H (hidden) fields.
+        - Handles escaped characters (semicolons and colons).
+        - Uses default values: T=nopass, H=false if not specified.
+
+        Parameters
+        ----------
+        qr_string : str
+            QR code data string in WIFI:S:ssid;T:type;P:password; format.
+
+        Returns
+        -------
+        tuple
+            (ssid, password, security_type) extracted from QR code.
+
+        Raises
+        ------
+        ValueError
+            If QR code string doesn't start with "WIFI:".
+        """
         # Ensure it follows the WIFI QR code format
         if not qr_string.startswith("WIFI:"):
             raise ValueError("Invalid WiFi QR code format")
@@ -135,6 +252,32 @@ class BehaviourWifiConnect:
         return wifi_details["S"], wifi_details["P"], wifi_details["T"]
 
     def try_connect_to_wifi(self, ssid, password, security_type):
+        """
+        Attempt to connect to WiFi network using NetworkManager.
+
+        Behavior
+        --------
+        - Checks if already connected to the target SSID.
+        - Triggers WiFi rescan to discover available networks.
+        - Connects using nmcli with or without password based on security type.
+        - Verifies connection success.
+        - Immediately deletes the saved connection profile for security.
+
+        Parameters
+        ----------
+        ssid : str
+            Network SSID to connect to.
+        password : str
+            Network password (unused for open networks).
+        security_type : str
+            Security type ("nopass" or "" for open networks, otherwise secured).
+
+        Returns
+        -------
+        tuple
+            (success, message) where success is bool and message is str containing
+            connected SSID on success or error message on failure.
+        """
         print("Connecting to WiFi network %s" % ssid)
         try:
             # if already connected to this SSID, return success immediately
@@ -182,6 +325,19 @@ class BehaviourWifiConnect:
             return False, "Failed to connect to WiFi network: %s" % e
 
     def run(self):
+        """
+        Main behaviour loop.
+
+        Behavior
+        --------
+        - Polls behaviours.wifi_connect flag at LOOP_RATE.
+        - On enable: disables test_motors and look_around, shows camera stream.
+        - On disable: restores previously active behaviours, hides camera stream.
+        - While active: reads frames, detects QR codes, parses WiFi credentials,
+          attempts connection, displays status messages.
+        - Exits wifi_connect mode after successful connection or on user cancel.
+        - Shuts down node in finally block.
+        """
         try:
             self.node.loginfo("starting behaviour")
             was_enabled = False
