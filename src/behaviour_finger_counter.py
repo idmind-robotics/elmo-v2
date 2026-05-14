@@ -29,24 +29,29 @@ class BehaviourFingerNumbers:
     """
     Middleware behaviour that counts raised fingers in real time using MediaPipe.
 
-    Attributes
-    ----------
-    node : mw.Node
-        Middleware node used for shutdown and logging.
-    result : mp.tasks.vision.HandLandmarkerResult or None
-        Most recent hand landmark result from the MediaPipe callback.
-    lock_result : threading.Lock
-        Lock protecting concurrent access to `result`.
-    landmarker : mp.tasks.vision.HandLandmarker
-        MediaPipe hand landmarker running in live stream mode.
-    stream : cv2.VideoCapture
-        MJPEG camera stream used as the video source.
-    latest_frame : numpy.ndarray or None
-        Most recent frame captured from the camera stream.
-    lock_frame : threading.Lock
-        Lock protecting concurrent access to `latest_frame`.
-    running : bool
-        Controls the camera reader thread loop.
+    Runs MediaPipe HandLandmarker in live stream mode with a background thread
+    continuously reading camera frames. Counts fingers by comparing landmark
+    positions and prints count changes to terminal.
+
+    > ## Attributes
+
+    ``node : mw.Node`` : Middleware node used for shutdown and logging.
+
+    ``result : mp.tasks.vision.HandLandmarkerResult or None`` : Most recent hand landmark result from the MediaPipe callback.
+
+    ``lock_result : threading.Lock`` : Lock protecting concurrent access to result.
+
+    ``landmarker : mp.tasks.vision.HandLandmarker`` : MediaPipe hand landmarker running in live stream mode.
+
+    ``stream : cv2.VideoCapture`` : MJPEG camera stream used as the video source.
+
+    ``latest_frame : numpy.ndarray or None`` : Most recent frame captured from the camera stream.
+
+    ``lock_frame : threading.Lock`` : Lock protecting concurrent access to latest_frame.
+
+    ``running : bool`` : Controls the camera reader thread loop.
+
+    > ## Functions
     """
 
     def __init__(self):
