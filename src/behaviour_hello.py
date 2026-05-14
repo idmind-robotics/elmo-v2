@@ -23,6 +23,44 @@ FRAME_H = 480
 
 
 class BehaviourHello:
+    """
+    Middleware behaviour that greets detected faces and tracks them with the robot's head.
+    Captures frames from an MJPEG stream, runs YuNet face detection, plays a greeting
+    sound on first detection (with a cooldown), and servo-tracks the face using pan/tilt.
+    Pauses automatically when the photographer behaviour is active.
+
+    > ## Attributes
+
+    ``speakers : mw.Speakers`` : Middleware speaker controller for playing greeting sounds.
+
+    ``behaviours : mw.Behaviours`` : Middleware behaviour configuration flags, used to check photographer state.
+
+    ``server : mw.Server`` : Middleware server helper for resolving image and sound resource URLs.
+
+    ``node : mw.Node`` : Middleware node used for logging and shutdown signalling.
+
+    ``pan : mw.Pan`` : Middleware pan servo controller for horizontal head movement.
+
+    ``tilt : mw.Tilt`` : Middleware tilt servo controller for vertical head movement.
+
+    ``detector : cv2.FaceDetectorYN`` : YuNet ONNX face detector configured for FRAME_W x FRAME_H input.
+
+    ``stream : cv2.VideoCapture`` : MJPEG video capture connected to the local camera stream.
+
+    ``latest_frame : numpy.ndarray or None`` : Most recent frame captured by the reader thread; None until first frame arrives.
+
+    ``onboard : mw.Onboard`` : Middleware onboard display controller for showing reaction images.
+
+    ``lock : threading.Lock`` : Mutex protecting access to latest_frame between the reader thread and main loop.
+
+    ``running : bool`` : Flag used to signal the reader thread to stop when the behaviour shuts down.
+
+    ``smooth_cx : float`` : Exponentially smoothed horizontal face centre position (set on first track call).
+
+    ``smooth_cy : float`` : Exponentially smoothed vertical face centre position (set on first track call).
+
+    > ## Functions
+    """
 
     def __init__(self):
         self.speakers = mw.Speakers()
@@ -44,6 +82,20 @@ class BehaviourHello:
 
 
     def reader(self):
+        """
+        Background thread target that continuously reads frames from the MJPEG stream
+        and stores the latest one for use by the detection loop.
+
+        Runs until ``self.running`` is set to False. Failed reads are silently skipped.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         while self.running:
             ret, frame = self.stream.read()
             if ret:
@@ -52,6 +104,25 @@ class BehaviourHello:
 
 
     def detect_face(self):
+        """
+        Grab the latest frame and run YuNet face detection on it.
+
+        Only the highest-confidence (first) detected face is considered.
+        Returns the pixel coordinates of its centre.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        detected : bool
+            True if at least one face was found in the latest frame, False otherwise.
+        cx : float or None
+            Horizontal pixel position of the face centre; None when no face is detected.
+        cy : float or None
+            Vertical pixel position of the face centre; None when no face is detected.
+        """
         with self.lock:
             frame = self.latest_frame
         if frame is None:
@@ -66,6 +137,25 @@ class BehaviourHello:
 
 
     def track_face(self, cx, cy):
+        """
+        Update pan and tilt servo targets to keep the detected face centred in frame.
+
+        Applies exponential smoothing (alpha=0.4) to the raw face position before
+        computing the tracking error. A dead-band of ±8 % of frame width/height
+        suppresses small jitter. The resulting angle adjustments are clamped to each
+        servo's hardware limits before being written.
+
+        Parameters
+        ----------
+        cx : float
+            Horizontal pixel position of the face centre in the current frame.
+        cy : float
+            Vertical pixel position of the face centre in the current frame.
+
+        Returns
+        -------
+        None
+        """
         alpha = 0.4
         if not hasattr(self, 'smooth_cx'):
             self.smooth_cx = float(cx)
@@ -95,6 +185,27 @@ class BehaviourHello:
 
 
     def run(self):
+        """
+        Main behaviour loop.
+
+        Enables pan and tilt servos, then polls the camera at ~10 Hz. On each tick:
+        - Skips processing if the photographer behaviour is active.
+        - Accumulates consecutive detection frames; after CONFIRM_FRAMES a face is
+          considered present and a greeting sound is played (subject to COOLDOWN).
+        - Calls track_face() every tick while a face is confirmed present.
+        - After ABSENT_FRAMES consecutive misses the face is considered gone.
+
+        Releases the video stream and shuts down the middleware node on exit (including
+        on KeyboardInterrupt or any other exception).
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         self.node.loginfo("Behaviour started.")
         face_detected = False
         last_greeted = 0
