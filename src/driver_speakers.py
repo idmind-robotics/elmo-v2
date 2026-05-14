@@ -15,10 +15,36 @@ import middleware as mw
 
 
 class DriverSpeakers:
+    """
+    Middleware driver that plays audio through speakers using aplay and sox.
+
+    > ## Attributes
+
+    ``speakers : mw.Speakers`` : Middleware speaker state holder.
+
+    ``volume : int`` : Local volume cache updated from middleware.
+
+    ``node : mw.Node`` : Middleware node used for shutdown and logging.
+
+    ``playback_thread : threading.Thread or None`` : Background thread for audio playback.
+
+    ``playback_process : subprocess.Popen or None`` : aplay subprocess handle.
+
+    ``curl_process : subprocess.Popen or None`` : curl subprocess handle for fetching audio.
+
+    ``sox_process : subprocess.Popen or None`` : sox subprocess handle for volume control.
+
+    > ## Functions
+    """
+
     def __init__(self):
         """
-        Connect to middleware.
-        Initialize node.
+        Initialize middleware objects and driver node.
+
+        Behavior
+        --------
+        - Initializes all subprocess handles to None.
+        - Sets initial local volume to 0.
         """
         self.speakers = mw.Speakers()
         self.volume = 0
@@ -30,7 +56,20 @@ class DriverSpeakers:
 
     def play_sound(self, url):
         """
-        Play a sound.
+        Play audio from a URL through the speakers.
+
+        Behavior
+        --------
+        - Fetches audio file via curl.
+        - Applies volume control via sox (converts 0-99 to 0.0-1.0 scale).
+        - Plays through aplay targeting hardware device plughw:2,0.
+        - Logs any stderr output from subprocess commands.
+        - Clears middleware URL and playing fields when complete.
+
+        Parameters
+        ----------
+        url : str
+            HTTP URL of the audio file to play.
         """
         self.speakers.playing = url
         self.node.loginfo(f"Playing {url}")
@@ -70,7 +109,13 @@ class DriverSpeakers:
 
     def stop_sound(self):
         """
-        Stop playing a sound immediately.
+        Stop audio playback immediately.
+
+        Behavior
+        --------
+        - Terminates all active subprocesses (aplay, sox, curl).
+        - Kills any remaining aplay or curl processes via pkill.
+        - Clears middleware playing field.
         """
         print("stopping")
         if self.playback_process and self.playback_process.poll() is None:
@@ -85,7 +130,16 @@ class DriverSpeakers:
 
     def run(self):
         """
-        Main loop.
+        Main driver loop.
+
+        Behavior
+        --------
+        - Marks speaker driver as ready in middleware.
+        - Polls every 100ms for URL changes in middleware.
+        - Starts new playback thread when URL changes from current playing state.
+        - Stops playback when URL is cleared while audio is playing.
+        - Updates local volume cache from middleware.
+        - Always stops playback and shuts down node in finally block.
         """
         try:
             self.speakers.ready = True
