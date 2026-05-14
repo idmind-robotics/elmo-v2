@@ -35,25 +35,34 @@ class BehaviourOuch:
     Reads onboard.touch from Redis (set by /api/touch via main.js touchstart).
     sleep_mode yields the display while behaviour_ouch_active is True.
 
-    Attributes
-    ----------
-    onboard : mw.Onboard
-        Middleware onboard display controller.
-    behaviours : mw.Behaviours
-        Middleware behaviour configuration flags.
-    server : mw.Server
-        Middleware server helper for resource URLs.
-    node : mw.Node
-        Middleware node used for shutdown and logging.
-    url_open : str
-        Pre-resolved URL for the open eyes static image.
-    video_url : str
-        Pre-resolved URL for the ouch_tears_open video.
+    > ## Attributes
+
+    ``onboard : mw.Onboard`` : Middleware onboard display controller for images and videos.
+
+    ``behaviours : mw.Behaviours`` : Middleware behaviour configuration flags, used to check the ouch toggle.
+
+    ``server : mw.Server`` : Middleware server helper for resolving image and video resource URLs.
+
+    ``node : mw.Node`` : Middleware node used for shutdown and logging.
+
+    ``url_open : str`` : Pre-resolved URL for the open eyes static image.
+
+    ``video_url : str`` : Pre-resolved URL for the ouch_tears_open animation video.
+
+    > ## Functions
     """
 
     def __init__(self):
         """
-        Initialize middleware objects and pre-resolve URLs.
+        Connect to middleware, initialise the node, and pre-resolve resource URLs.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
         """
         self.onboard = mw.Onboard()
         self.behaviours = mw.Behaviours()
@@ -71,7 +80,11 @@ class BehaviourOuch:
         key : str
             Redis key name.
         value : any
-            Value to store.
+            Value to store (serialised to JSON before writing).
+
+        Returns
+        -------
+        None
         """
         mw.connection.set(key, mw.json.dumps(value))
 
@@ -79,10 +92,17 @@ class BehaviourOuch:
         """
         Check and consume a pending touch event from Redis.
 
+        Reads onboard.touch; if True, immediately resets it to False so the
+        event is not re-processed on the next tick.
+
+        Parameters
+        ----------
+        None
+
         Returns
         -------
         bool
-            True if onboard.touch was True, resets it to False after reading.
+            True if a touch event was pending, False otherwise.
         """
         touched = bool(self.onboard.touch)
         if touched:
@@ -91,15 +111,20 @@ class BehaviourOuch:
 
     def ouch(self):
         """
-        Execute the ouch animation.
+        Execute the full ouch animation sequence.
 
-        Behavior
-        --------
-        - Sets behaviour_ouch_active so sleep_mode yields the display.
-        - Plays ouch_tears_open.mp4 on the onboard display.
-        - Waits for the video to finish.
-        - Restores open.png and releases display back to sleep_mode.
-        - Signals sleep_mode to reset its inactivity timer.
+        Sets behaviour_ouch_active so that sleep_mode yields the display,
+        plays ouch_tears_open.mp4, waits for the video to finish, then
+        restores open.png and signals sleep_mode to reset its inactivity
+        timer before clearing the active flag.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
         """
         self.set_key("behaviour_ouch_active", True)
         self.node.loginfo("ouch")
@@ -114,12 +139,23 @@ class BehaviourOuch:
         """
         Main behaviour loop.
 
-        Behavior
-        --------
-        - Polls Redis for touch events at ~20 Hz.
-        - Skips if behaviours.ouch is False.
-        - Triggers ouch() on touch, then enforces a cooldown before next trigger.
-        - Clears behaviour_ouch_active and shuts down node in finally block.
+        Polls Redis for touch events at ~20 Hz. On each tick:
+        - Clears any pending touch and skips if behaviours.ouch is False.
+        - Clears any pending touch and skips if the COOLDOWN period has not
+          elapsed since the last ouch animation.
+        - Calls ouch() when a touch event is detected, then records the
+          timestamp for cooldown enforcement.
+
+        Clears behaviour_ouch_active and shuts down the middleware node on
+        exit (including on KeyboardInterrupt or any other exception).
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
         """
         try:
             self.node.loginfo("starting behaviour")
