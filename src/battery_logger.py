@@ -1,3 +1,12 @@
+"""
+
+Tool node.
+
+Reads the battery voltage from middleware at a fixed interval
+and appends each reading with a timestamp to a CSV log file.
+
+"""
+
 import time
 import datetime
 

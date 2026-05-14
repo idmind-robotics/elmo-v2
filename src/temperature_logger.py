@@ -1,6 +1,18 @@
 #! /usr/bin/env python
 
 
+"""
+
+Tool node.
+
+Temperature logger.
+
+This module periodically reads raw motor temperatures, converts them
+to calibrated values and stores them in a CSV log file.
+
+"""
+
+
 import time
 import datetime
 
@@ -22,6 +34,19 @@ delay = 60.0 * 1.0  # 1 minutes
 
 
 def convert(temperature):
+    """
+    Convert raw temperature readings to calibrated values.
+
+    Parameters
+    ----------
+    temperature : float
+        Raw temperature sensor value.
+
+    Returns
+    -------
+    float
+        Calibrated temperature value.
+    """
     return slope * temperature + intercept
 
 

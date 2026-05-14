@@ -1,9 +1,7 @@
 """
-
 Behaviour node.
 
 While enabled, the behaviour makes the head look around, systematically.
-
 """
 
 import time
@@ -27,10 +25,37 @@ ANGLES = [
 
 
 class BehaviourTestMotors:
+    """
+    Middleware behaviour that exercises the pan and tilt servos through a fixed
+    sequence of positions for diagnostic purposes.
+    Waits for both servos to be ready, then cycles through the predefined ANGLES
+    list (centre, four corners) at a fixed interval while the test_motors flag is set.
+    Enables torque when the flag is set and disables it (returning to centre) when cleared.
+
+    > ## Attributes
+
+    ``node : mw.Node`` : Middleware node used for logging and shutdown signalling.
+
+    ``behaviours : mw.Behaviours`` : Middleware behaviour configuration flags, used to read the test_motors toggle.
+
+    ``pan : mw.Pan`` : Middleware pan servo controller for horizontal head movement.
+    
+    ``tilt : mw.Tilt`` : Middleware tilt servo controller for vertical head movement.
+
+    > ## Functions
+    """
+
     def __init__(self):
         """
-        Connect to middleware.
-        Initialize node.
+        Connect to middleware and initialise the node, behaviour flags, and servo controllers.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
         """
         self.node = mw.Node("behaviour_test_motors")
         self.behaviours = mw.Behaviours()
@@ -39,7 +64,27 @@ class BehaviourTestMotors:
 
     def run(self):
         """
-        Main loop.
+        Main behaviour loop.
+
+        Blocks until both pan and tilt servos report ready, then polls at ~10 Hz.
+        On each tick:
+        - If test_motors transitions from False to True, enables torque on both servos.
+        - If test_motors transitions from True to False, resets angles to 0°, waits
+          2 s for the head to return to centre, then disables torque.
+        - While enabled and servos are powered, commands the next [pan, tilt] pair
+          from the ANGLES sequence (wrapping around with modulo), increments the
+          index, then sleeps for SLEEP seconds before the next move.
+
+        Shuts down the middleware node on exit (including on KeyboardInterrupt or
+        any other exception).
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
         """
         try:
             self.node.loginfo("waiting for pan and tilt to be ready")

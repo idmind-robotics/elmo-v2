@@ -25,10 +25,29 @@ except ImportError:
 
 
 class DriverTouchSensors:
+    """
+    Middleware driver that reads capacitive touch sensors via I2C.
+
+    > ## Attributes
+
+    ``mpr121 : MPR121`` : Adafruit MPR121 capacitive touch sensor controller.
+
+    ``touch_sensors : mw.TouchSensors`` : Middleware touch sensor state holder.
+
+    ``node : mw.Node`` : Middleware node used for shutdown and logging.
+
+    > ## Functions
+    """
+
     def __init__(self):
         """
-        Connect to middleware.
-        Initialize node.
+        Initialize I2C bus and MPR121 sensor controller.
+
+        Behavior
+        --------
+        - Initializes I2C bus 1 (/dev/i2c-1) using board.SCL and board.SDA.
+        - Creates MPR121 controller instance for capacitive touch sensing.
+        - Connects to middleware touch sensor state holder.
         """
         # Use I2C bus 1 (/dev/i2c-1) for Pi5
         i2c = busio.I2C(board.SCL, board.SDA)
@@ -38,7 +57,15 @@ class DriverTouchSensors:
 
     def run(self):
         """
-        Main loop.
+        Main driver loop.
+
+        Behavior
+        --------
+        - Marks touch sensor driver as ready in middleware.
+        - Polls all 6 touch sensors every 100ms.
+        - Reads filtered capacitance data for chest and head sensors.
+        - Updates raw sensor values in middleware for calibration processing.
+        - Always shuts down node in finally block.
         """
         try:
             self.touch_sensors.ready = True

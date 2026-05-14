@@ -1,5 +1,7 @@
 """
 
+Tool node.
+
 This module implements the robot's HTTP server.
 
 It serves the static resources (images, icons, sounds, videos) and provides an API to control the onboard screen.
@@ -34,11 +36,31 @@ node = mw.Node("http_server")
 
 @app.route("/")
 def index():
+    """
+    Serve the onboard web interface homepage.
+
+    Returns
+    -------
+    flask.wrappers.Response
+        HTML response containing the onboard interface page.
+    """
     return send_from_directory(server.static_path, "index.html")
 
 
 @app.route("/api/onboard", methods=["GET", "POST"])
 def onboard_handle():
+    """
+    Get or update onboard display state.
+
+    GET requests return the current onboard image, text, URL and video.
+
+    POST requests update one or more onboard display fields.
+
+    Returns
+    -------
+    flask.wrappers.Response
+        JSON response containing the current onboard state.
+    """
     if request.method == "GET":
         return jsonify(
             {
@@ -70,6 +92,19 @@ def onboard_handle():
 
 @app.route("/api/onboard/speech", methods=["POST"])
 def onboard_speech():
+    """
+    Update the recognized speech text.
+
+    Parameters
+    ----------
+    result : str
+        Speech recognition result received from the onboard webpage.
+
+    Returns
+    -------
+    flask.wrappers.Response
+        Empty JSON response.
+    """
     r = request.json["result"]
     print("speech: " + r)
     onboard.speech = r
@@ -78,6 +113,16 @@ def onboard_speech():
 
 @app.route("/api/onboard/log", methods=["POST"])
 def onboard_log():
+    """
+    Receive and store onboard log messages.
+
+    Supported log levels are info, warn and error.
+
+    Returns
+    -------
+    flask.wrappers.Response
+        Empty JSON response.
+    """
     if "info" in request.json:
         log = "Onboard " + request.json["info"]
         node.loginfo(log)
@@ -95,6 +140,18 @@ def onboard_log():
 
 @app.route("/icons", methods=["GET", "POST"])
 def icons():
+    """
+    List or upload LED icon resources.
+
+    GET requests return all available icon filenames.
+
+    POST requests upload a new icon file.
+
+    Returns
+    -------
+    flask.wrappers.Response
+        JSON response containing icon data or upload status.
+    """
     if request.method == "GET":
         icon_list = os.listdir(server.static_path + "/icons")
         return jsonify(icon_list)
@@ -110,6 +167,19 @@ def icons():
 
 @app.route("/icons/<name>", methods=["DELETE"])
 def delete_icon(name):
+    """
+    Delete an icon resource.
+
+    Parameters
+    ----------
+    name : str
+        Name of the icon file to delete.
+
+    Returns
+    -------
+    flask.wrappers.Response
+        JSON response indicating deletion status.
+    """
     if request.method == "DELETE":
         full_name = server.static_path + "/icons/" + name
         print("deleting " + full_name)
@@ -119,6 +189,18 @@ def delete_icon(name):
 
 @app.route("/images", methods=["GET", "POST"])
 def images():
+    """
+    List or upload image resources.
+
+    GET requests return all available image filenames.
+
+    POST requests upload a new image file.
+
+    Returns
+    -------
+    flask.wrappers.Response
+        JSON response containing image data or upload status.
+    """
     if request.method == "GET":
         image_list = os.listdir(server.static_path + "/images")
         return jsonify(image_list)
@@ -132,6 +214,19 @@ def images():
 
 @app.route("/images/<name>", methods=["DELETE"])
 def delete_image(name):
+    """
+    Delete an image resource.
+
+    Parameters
+    ----------
+    name : str
+        Name of the image file to delete.
+
+    Returns
+    -------
+    flask.wrappers.Response
+        JSON response indicating deletion status.
+    """
     if request.method == "DELETE":
         full_name = server.static_path + "/images/" + name
         print("deleting " + full_name)
@@ -141,6 +236,18 @@ def delete_image(name):
 
 @app.route("/sounds", methods=["GET", "POST"])
 def sounds():
+    """
+    List or upload sound resources.
+
+    GET requests return all available sound filenames.
+
+    POST requests upload a new sound file.
+
+    Returns
+    -------
+    flask.wrappers.Response
+        JSON response containing sound data or upload status.
+    """
     if request.method == "GET":
         sound_list = os.listdir(server.static_path + "/sounds")
         return jsonify(sound_list)
@@ -154,6 +261,19 @@ def sounds():
 
 @app.route("/sounds/<name>", methods=["DELETE"])
 def delete_sound(name):
+    """
+    Delete a sound resource.
+
+    Parameters
+    ----------
+    name : str
+        Name of the sound file to delete.
+
+    Returns
+    -------
+    flask.wrappers.Response
+        JSON response indicating deletion status.
+    """
     if request.method == "DELETE":
         full_name = server.static_path + "/sounds/" + name
         print("deleting " + full_name)
@@ -163,6 +283,18 @@ def delete_sound(name):
 
 @app.route("/videos", methods=["GET", "POST"])
 def videos():
+    """
+    List or upload video resources.
+
+    GET requests return all available video filenames.
+
+    POST requests upload a new video file.
+
+    Returns
+    -------
+    flask.wrappers.Response
+        JSON response containing video data or upload status.
+    """
     if request.method == "GET":
         video_list = os.listdir(server.static_path + "/videos")
         return jsonify(video_list)
@@ -176,11 +308,38 @@ def videos():
 
 @app.route("/videos/<name>", methods=["DELETE"])
 def delete_video(name):
+    """
+    Delete a video resource.
+
+    Parameters
+    ----------
+    name : str
+        Name of the video file to delete.
+
+    Returns
+    -------
+    flask.wrappers.Response
+        JSON response indicating deletion status.
+    """
     if request.method == "DELETE":
         full_name = server.static_path + "/videos/" + name
         print("deleting " + full_name)
         os.remove(full_name)
         return jsonify("OK")
+
+
+@app.route("/api/touch", methods=["POST"])
+def touch():
+    """
+    Trigger a touch event from the onboard webpage.
+
+    Returns
+    -------
+    flask.wrappers.Response
+        Empty JSON response.
+    """
+    onboard.touch = True
+    return jsonify({})
 
 
 if __name__ == "__main__":

@@ -14,10 +14,33 @@ import middleware as mw
 
 
 class DriverGpio:
+    """
+    Hardware driver for the GPIO subsystem.
+
+    Manages GPIO input and output pins via the lgpio library. Controls the
+    audio and monitor power outputs, and reads the physical power button
+    input. State changes are communicated to and from the rest of the
+    system exclusively through the middleware GPIO object.
+
+    > ## Attributes
+
+    ``node : mw.Node`` : Middleware node used for shutdown signalling and logging.
+
+    ``gpio : mw.GPIO`` : Middleware GPIO state object containing pin numbers, enable flags, and button state.
+    
+    ``chip : int`` : lgpio chip handle for ``/dev/gpiochip0``, used for all subsequent pin operations.
+
+    > ## Functions
+    """
+
     def __init__(self):
         """
         Connect to middleware.
         Initialize node.
+
+        Opens the GPIO chip, claims the button pin as an input, and claims
+        the audio and monitor pins as outputs (initialised HIGH). Logs a
+        confirmation message once setup is complete.
         """
         self.node = mw.Node("driver_gpio")
         self.gpio = mw.GPIO()
@@ -39,6 +62,14 @@ class DriverGpio:
     def enable_audio(self, control):
         """
         Enable or disable the audio power.
+
+        Writes a HIGH or LOW signal to the audio GPIO pin and logs the
+        resulting state.
+
+        Parameters
+        ----------
+        control : bool
+            ``True`` to power the audio circuit on; ``False`` to power it off.
         """
         if control:
             self.node.loginfo("gpio: audio ON")
@@ -50,6 +81,14 @@ class DriverGpio:
     def enable_monitor(self, control):
         """
         Enable or disable the monitor power.
+
+        Writes a HIGH or LOW signal to the monitor GPIO pin and logs the
+        resulting state.
+
+        Parameters
+        ----------
+        control : bool
+            ``True`` to power the monitor on; ``False`` to power it off.
         """
         if control:
             self.node.loginfo("gpio: monitor ON")
@@ -61,6 +100,23 @@ class DriverGpio:
     def run(self):
         """
         Main loop.
+
+        Marks the GPIO subsystem as ready in middleware, then polls at
+        10 Hz until shutdown is requested. On each tick:
+
+        - **Audio control**: calls ``enable_audio`` and syncs
+          ``gpio.audio_enabled`` whenever ``gpio.audio_enable`` diverges
+          from the current enabled state.
+        - **Monitor control**: calls ``enable_monitor`` and syncs
+          ``gpio.monitor_enabled`` whenever ``gpio.monitor_enable`` diverges
+          from the current enabled state.
+        - **Button**: reads ``gpio.button_pin`` and updates
+          ``gpio.button_pressed``; logs a message on the rising edge.
+
+        On exit — whether from a ``KeyboardInterrupt`` or a middleware
+        shutdown signal — audio and monitor are powered off, a brief
+        settling delay is observed, the GPIO chip handle is closed, and
+        the node is shut down.
         """
         try:
             self.gpio.ready = True

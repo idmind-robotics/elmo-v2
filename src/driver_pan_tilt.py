@@ -19,10 +19,34 @@ TEMPERATURE_INTERCEPT = -79.47
 
 
 class DriverPanTilt:
+    """
+    Hardware driver for the pan and tilt Herkulex servo system.
+
+    Connects to both servos over a serial port and, on each tick, applies
+    any pending PID tuning changes, synchronises torque state, issues
+    angle commands with dynamically calculated playtimes, and reads back
+    current angles and temperatures into middleware. All coordination with
+    the rest of the system happens exclusively through the middleware Pan
+    and Tilt objects.
+
+    > ## Attributes
+    ``pan : mw.Pan`` : Middleware pan state object containing the target angle, PID parameters, torque flags, angle bias, playtime limits, and current sensor readings.
+    ``tilt : mw.Tilt`` : Middleware tilt state object with the same structure as ``pan`` but for the tilt axis.
+    ``node : mw.Node`` : Middleware node used for shutdown signalling and logging.
+    ``servo_pan : hx.servo`` : Herkulex servo handle for the pan axis, created during ``connect()``.
+    ``servo_tilt : hx.servo`` : Herkulex servo handle for the tilt axis, created during ``connect()``.
+
+    > ## Functions
+    """
+
     def __init__(self):
         """
         Connect to middleware.
         Initialize node.
+
+        Instantiates the middleware Pan, Tilt, and Node objects. The
+        physical servo connection is established separately by calling
+        ``connect()``.
         """
         self.pan = mw.Pan()
         self.tilt = mw.Tilt()
@@ -31,10 +55,16 @@ class DriverPanTilt:
     def connect(self):
         """
         Connect to servos.
+
+        Opens the serial port at ``/dev/ttyAMA0`` at 115200 baud, clears
+        any existing Herkulex errors, then binds ``servo_pan`` and
+        ``servo_tilt`` handles using the IDs stored in the middleware Pan
+        and Tilt objects. Logs each step of the connection sequence and
+        waits briefly between stages to allow the hardware to settle.
         """
         pan_id = self.pan.id
         tilt_id = self.tilt.id
-        hx.connect("/dev/serial0", 115200)
+        hx.connect("/dev/ttyAMA0", 115200)
         self.node.loginfo("connected to serial port")
         hx.clear_errors()
         time.sleep(1.0)
@@ -51,6 +81,37 @@ class DriverPanTilt:
     def run(self):
         """
         Main loop.
+
+        Calls ``connect()`` to establish the servo connection, marks both
+        axes as ready in middleware, then enters a polling loop that runs
+        until a ``hx.HerkulexError`` is raised or the middleware node
+        signals shutdown. On each tick the loop performs the following
+        steps for both axes:
+
+        - **PID calibration**: compares the requested P and D gains
+          against the currently applied values and writes any changed
+          gain to the servo hardware.
+        - **Torque control**: calls ``torque_on()`` or ``torque_off()``
+          whenever the ``enable`` flag diverges from the ``enabled``
+          state, then syncs the flag.
+        - **Angle command**: if the servo is enabled and the target angle
+          has changed, clamps it to ``[min_angle, max_angle]``, computes
+          a playtime proportional to the motion range relative to the
+          full axis range, adds the axis bias, and issues
+          ``set_servo_angle()``.
+        - **Angle readback**: reads the current angle from each servo,
+          subtracts the axis bias, and writes the result to
+          ``current_angle`` in middleware.
+        - **Temperature readback**: reads the raw temperature register,
+          stores it in ``temperature_raw``, and applies the linear
+          calibration (``TEMPERATURE_SLOPE`` and ``TEMPERATURE_INTERCEPT``)
+          to compute the value written to ``temperature``.
+
+        ``IndexError`` exceptions from the Herkulex library are caught
+        per tick, errors are cleared on the hardware, and the loop
+        continues. A ``hx.HerkulexError`` terminates the loop and is
+        printed. The node is shut down and the serial port is closed in
+        the ``finally`` block regardless of the exit path.
         """
         try:
             self.error_count = 0

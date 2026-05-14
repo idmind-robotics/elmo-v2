@@ -17,10 +17,36 @@ MAX_SLEEP = 4.0
 
 
 class BehaviourLookAround:
+    """
+    Middleware behaviour that randomly moves the robot's head while active.
+    Waits for pan and tilt servos to be ready before entering the main loop.
+    Enables torque when the look_around flag is set, and disables it (returning
+    the head to centre) when the flag is cleared.
+
+    > ## Attributes
+
+    ``node : mw.Node`` : Middleware node used for logging and shutdown signalling.
+
+    ``behaviours : mw.Behaviours`` : Middleware behaviour configuration flags, used to read the look_around toggle.
+
+    ``pan : mw.Pan`` : Middleware pan servo controller for horizontal head movement.
+    
+    ``tilt : mw.Tilt`` : Middleware tilt servo controller for vertical head movement.
+
+    > ## Functions
+    """
+
     def __init__(self):
         """
-        Connect to middleware.
-        Initialize node.
+        Connect to middleware and initialise the node, behaviour flags, and servo controllers.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
         """
         self.node = mw.Node("behaviour_look_around")
         self.behaviours = mw.Behaviours()
@@ -29,7 +55,28 @@ class BehaviourLookAround:
 
     def run(self):
         """
-        Main loop.
+        Main behaviour loop.
+
+        Blocks until both pan and tilt servos report ready, then polls at ~10 Hz.
+        On each tick:
+        - If look_around transitions from False to True, enables torque on both servos.
+        - If look_around transitions from True to False, resets angles to 0°, waits
+          2 s for the head to return to centre, then disables torque.
+        - While enabled and servos are powered, picks a random pan angle within
+          ±MAX_RANGE degrees of the current position (clamped to hardware limits),
+          does the same for tilt, commands both servos, then sleeps for a random
+          interval between MIN_SLEEP and MAX_SLEEP seconds.
+
+        Shuts down the middleware node on exit (including on KeyboardInterrupt or
+        any other exception).
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
         """
         try:
             self.node.loginfo("waiting for pan and tilt to be ready")
