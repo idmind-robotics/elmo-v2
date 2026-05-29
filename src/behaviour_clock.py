@@ -105,27 +105,27 @@ class BehaviourClock:
             return 88, "no_internet"
 
     def get_city(self):
-            """
-            Retrieve city from Redis, or infer it from the system timezone as fallback.
+        """
+        Retrieve city from Redis, or infer it from the system timezone as fallback.
 
-            Returns
-            -------
-            str
-                City name used for weather queries.
-            """
-            try:
-                return mw.get_key("city")
-            except (TypeError, ValueError):
-                tz_map = {
-                    "GMT": "Lisbon",
-                    "WET": "Lisbon",
-                    "CET": "Paris",
-                    "EST": "New York",
-                    "EDT": "New York",
-                    "PST": "Los Angeles",
-                    "PDT": "Los Angeles",
-                }
-                return tz_map.get(time.tzname[0], "Lisbon")
+        Returns
+        -------
+        str
+            City name used for weather queries.
+        """
+        try:
+            return mw.get_key("city")
+        except (TypeError, ValueError):
+            tz_map = {
+                "GMT": "Lisbon",
+                "WET": "Lisbon",
+                "CET": "Paris",
+                "EST": "New York",
+                "EDT": "New York",
+                "PST": "Los Angeles",
+                "PDT": "Los Angeles",
+            }
+            return tz_map.get(time.tzname[0], "Lisbon")
 
     def get_night(self):
         """
@@ -139,7 +139,7 @@ class BehaviourClock:
         h = datetime.now().hour
         return h < 7 or h >= 20
 
-    def generate_clock_image(self):
+    def show_clock(self):
         """
         Generate the clock display image using the half-half layout.
 
@@ -168,7 +168,7 @@ class BehaviourClock:
 
         return self.leds.merge_halves(top, bottom)
 
-    def generate_weather_image(self):
+    def show_weather(self):
         """
         Generate the weather display image using the half-half layout.
 
@@ -197,7 +197,7 @@ class BehaviourClock:
 
         return self.leds.merge_halves(top, bottom)
 
-    def generate_battery_image(self):
+    def show_battery(self):
         """
         Generate the battery display image using the half-half layout.
 
@@ -311,8 +311,8 @@ class BehaviourClock:
         if self.get_blush_activity():
             return
         img_black = self.leds.create_canvas()
-        clock_img = self.generate_clock_image()
-        weather_img = self.generate_weather_image()
+        clock_img = self.show_clock()
+        weather_img = self.show_weather()
         if not self.fade_images(img_black, clock_img, steps=15, duration=1):
             return
         time.sleep(1.5)
@@ -323,7 +323,7 @@ class BehaviourClock:
         time.sleep(1.5)
         if not self.fade_images(weather_img, img_black, steps=20, duration=1):
             return
-        battery_img = self.generate_battery_image()
+        battery_img = self.show_battery()
         if not self.fade_images(img_black, battery_img, steps=15, duration=1):
             return
         last_pct = max(0, min(100, int(self.battery.percentage)))
@@ -334,7 +334,7 @@ class BehaviourClock:
                 return
             current_pct = max(0, min(100, int(self.battery.percentage)))
             if current_pct != last_pct:
-                battery_img = self.generate_battery_image()
+                battery_img = self.show_battery()
                 self.leds.load_from_image(battery_img)
                 last_pct = current_pct
             time.sleep(0.1)
