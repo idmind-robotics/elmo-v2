@@ -13,7 +13,6 @@ REQUIRES: Python 3.11 or 3.12, mediapipe installed.
 
 import time
 import cv2
-import numpy as np
 import mediapipe as mp
 import threading
 
