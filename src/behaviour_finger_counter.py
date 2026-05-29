@@ -25,7 +25,7 @@ FRAME_H = 480
 LOOP_RATE = 10
 
 
-class BehaviourFingerNumbers:
+class BehaviourFingerCounter:
     """
     Middleware behaviour that counts raised fingers in real time using MediaPipe.
 
@@ -58,35 +58,36 @@ class BehaviourFingerNumbers:
         """
         Initialize middleware node, MediaPipe hand landmarker, and camera stream.
         """
-        self.node = mw.Node("behaviour_finger_numbers")
-
-        # mediapipe hand landmarker setup
-        self.result = None
+        self.node = mw.Node("behaviour_finger_counter")
+        self.lock_frame = threading.Lock()
         self.lock_result = threading.Lock()
-
-        def update_result(result, output_image, timestamp_ms):
-            with self.lock_result:
-                self.result = result
-
-        options = mp.tasks.vision.HandLandmarkerOptions(base_options=mp.tasks.BaseOptions(model_asset_path='/home/idmind/elmo-v2/src/hand_landmarker.task'),
-            running_mode=mp.tasks.vision.RunningMode.LIVE_STREAM,
-            num_hands=1,
-            min_hand_detection_confidence=0.3,
-            min_hand_presence_confidence=0.3,
-            min_tracking_confidence=0.3,
-            result_callback=update_result
-        )
-        self.landmarker = mp.tasks.vision.HandLandmarker.create_from_options(options)
-
-        # camera stream setup
         self.stream = cv2.VideoCapture("http://localhost:8080/stream.mjpg")
         self.latest_frame = None
-        self.lock_frame = threading.Lock()
+        self.result = None
         self.running = True
         t = threading.Thread(target=self.reader, daemon=True)
         t.start()
         time.sleep(2)
         self.node.loginfo("Camera ready.")
+
+        # output_image and timestamp_ms are required by the callback of MediaPipe. If removed:
+        # TypeError: update_result() missing 2 required positional arguments: 'output_image' and 'timestamp_ms'
+
+        def update_result(result, output_image, timestamp_ms):
+            with self.lock_result:
+                self.result = result
+
+        self.landmarker = mp.tasks.vision.HandLandmarker.create_from_options(
+            mp.tasks.vision.HandLandmarkerOptions(
+                base_options=mp.tasks.BaseOptions(model_asset_path='/home/idmind/elmo-v2/src/hand_landmarker.task'),
+                running_mode=mp.tasks.vision.RunningMode.LIVE_STREAM,
+                num_hands=1,
+                min_hand_detection_confidence=0.3,
+                min_hand_presence_confidence=0.3,
+                min_tracking_confidence=0.3,
+                result_callback=update_result
+            )
+        )
 
     def reader(self):
         """
@@ -104,7 +105,7 @@ class BehaviourFingerNumbers:
                 with self.lock_frame:
                     self.latest_frame = frame
 
-    def count_fingers(self, hand_landmarks):
+    def finger_counter(self, hand_landmarks):
         """
         Count raised fingers from a set of hand landmarks.
 
@@ -188,14 +189,14 @@ class BehaviourFingerNumbers:
 
                 if result is None or not result.hand_landmarks:
                     if last_count is not None:
-                        print("No hand detected.")
+                        self.node.loginfo("No hand detected.")
                         last_count = None
                     continue
 
-                count = self.count_fingers(result.hand_landmarks[0])
+                count = self.finger_counter(result.hand_landmarks[0])
 
                 if count != last_count:
-                    print(f"Fingers lifted: {count}")
+                    self.node.loginfo(f"Fingers lifted: {count}")
                     last_count = count
 
         finally:
@@ -206,5 +207,5 @@ class BehaviourFingerNumbers:
 
 
 if __name__ == "__main__":
-    node = BehaviourFingerNumbers()
+    node = BehaviourFingerCounter()
     node.run()
