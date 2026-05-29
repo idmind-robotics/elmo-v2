@@ -30,7 +30,7 @@ class BehaviourClock:
 
     ``behaviours : mw.Behaviours`` : Middleware behaviour flags used to check if clock is enabled.
 
-    ``battery : mw.Battery`` : Middleware battery state used to read charge percentage.
+    ``battery : mw.Battery`` : Middleware battery state used to read percentage percentage.
 
     ``city : str`` : City name used for weather queries.
 
@@ -72,12 +72,13 @@ class BehaviourClock:
         - Queries wttr.in JSON API.
         - Matches the closest hourly entry to the current hour.
         - Maps weather description to one of the display icon keys.
-        - Falls back to (88, "no_internet") on any error.
+        - Falls back to (None, "no_internet") on any error.
 
         Returns
         -------
-        tuple[int, str]
+        tuple[int or None, str]
             Temperature in Celsius and weather icon key string.
+            Temperature is None when there is no internet connection.
         """
         url = f"https://wttr.in/{self.city}?format=j1"
         try:
@@ -101,8 +102,8 @@ class BehaviourClock:
 
             return temp, icon
 
-        except:
-            return 88, "no_internet"
+        except Exception:
+            return None, "no_internet"
 
     def get_city(self):
         """
@@ -154,17 +155,16 @@ class BehaviourClock:
         PIL.Image.Image
             Full 13x13 image ready to be loaded into the LEDs.
         """
-        now = datetime.now()
-        h, m = now.strftime("%H"), now.strftime("%M")
+        hours, minutes = datetime.now().strftime("%H"), datetime.now().strftime("%M")
 
         top = self.leds.create_top_canvas()
-        self.leds.draw_digit(top, h[0], 1, 1)
-        self.leds.draw_digit(top, h[1], 5, 1)
+        self.leds.draw_digit(top, hours[0], 1, 1)
+        self.leds.draw_digit(top, hours[1], 5, 1)
         self.leds.draw_letter(top, "H", 9, 1)
 
         bottom = self.leds.create_bottom_canvas()
-        self.leds.draw_digit(bottom, m[0], 1, 0)
-        self.leds.draw_digit(bottom, m[1], 5, 0)
+        self.leds.draw_digit(bottom, minutes[0], 1, 0)
+        self.leds.draw_digit(bottom, minutes[1], 5, 0)
 
         return self.leds.merge_halves(top, bottom)
 
@@ -176,6 +176,7 @@ class BehaviourClock:
         --------
         - Top half: weather condition icon.
         - Bottom half: temperature digits, degree dot, and "C" label.
+          Skipped entirely when there is no internet connection.
         - Halves are merged into a full 13x13 canvas.
 
         Returns
@@ -183,17 +184,17 @@ class BehaviourClock:
         PIL.Image.Image
             Full 13x13 image ready to be loaded into the LEDs.
         """
-        temp, icon_key = self.get_weather()
-
+        temperature, icon_key = self.get_weather()
         top = self.leds.create_top_canvas()
         self.leds.draw_icon(top, "weather_icons", icon_key)
 
-        t_str = str(abs(temp)).zfill(2)
         bottom = self.leds.create_bottom_canvas()
-        self.leds.draw_digit(bottom, t_str[0], 0, 1)
-        self.leds.draw_digit(bottom, t_str[1], 4, 1)
-        self.leds.draw_icon(bottom, "pixels", "degrees_dot", ox=8, oy=1)
-        self.leds.draw_letter(bottom, "C", 10, 1)
+        if icon_key != "no_internet":
+            temperature_str = str(abs(temperature)).zfill(2)
+            self.leds.draw_digit(bottom, temperature_str[0], 0, 1)
+            self.leds.draw_digit(bottom, temperature_str[1], 4, 1)
+            self.leds.draw_icon(bottom, "pixels", "degrees_dot", ox=8, oy=1)
+            self.leds.draw_letter(bottom, "C", 10, 1)
 
         return self.leds.merge_halves(top, bottom)
 
@@ -203,7 +204,7 @@ class BehaviourClock:
 
         Behavior
         --------
-        - Top half: battery icon showing charge level (red/yellow/green fill).
+        - Top half: battery icon showing percentage level (red/yellow/green fill).
         - Bottom half: percentage digits, centred by digit count (no % symbol).
         - 1 digit  (0–9):   single digit centred at ox=5.
         - 2 digits (10–99): left at ox=3, right at ox=7 (1-px gap at centre).
@@ -215,26 +216,26 @@ class BehaviourClock:
         PIL.Image.Image
             Full 13x13 image ready to be loaded into the LEDs.
         """
-        pct_int = max(0, min(100, int(self.battery.percentage)))
-        if pct_int <= 3:
+        percentage = max(0, min(100, int(self.battery.percentage)))
+        if percentage <= 3:
             icon_key = "empty"
-        elif pct_int <= 10:
+        elif percentage <= 10:
             icon_key = "level_1"
-        elif pct_int <= 20:
+        elif percentage <= 20:
             icon_key = "level_2"
-        elif pct_int <= 30:
+        elif percentage <= 30:
             icon_key = "level_3"
-        elif pct_int <= 40:
+        elif percentage <= 40:
             icon_key = "level_4"
-        elif pct_int <= 50:
+        elif percentage <= 50:
             icon_key = "level_5"
-        elif pct_int <= 60:
+        elif percentage <= 60:
             icon_key = "level_6"
-        elif pct_int <= 70:
+        elif percentage <= 70:
             icon_key = "level_7"
-        elif pct_int <= 80:
+        elif percentage <= 80:
             icon_key = "level_8"
-        elif pct_int <= 90:
+        elif percentage <= 90:
             icon_key = "level_9"
         else:
             icon_key = "level_10"
@@ -243,12 +244,12 @@ class BehaviourClock:
         self.leds.draw_icon(top, "battery_icons", icon_key)
 
         bottom = self.leds.create_bottom_canvas()
-        p_str = str(pct_int)
-        if len(p_str) == 1:
-            self.leds.draw_digit(bottom, p_str[0], 5, 1)
-        elif len(p_str) == 2:
-            self.leds.draw_digit(bottom, p_str[0], 3, 1)
-            self.leds.draw_digit(bottom, p_str[1], 7, 1)
+        percentage_str = str(percentage)
+        if len(percentage_str) == 1:
+            self.leds.draw_digit(bottom, percentage_str[0], 5, 1)
+        elif len(percentage_str) == 2:
+            self.leds.draw_digit(bottom, percentage_str[0], 3, 1)
+            self.leds.draw_digit(bottom, percentage_str[1], 7, 1)
         else:
             self.leds.draw_digit(bottom, "1", 1, 1)
             self.leds.draw_digit(bottom, "0", 5, 1)
