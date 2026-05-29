@@ -112,12 +112,12 @@ class BehaviourBlush:
         """
         eye_state = self.sleep_mode_state()
         video_url = self.video_urls[eye_state]
-        duration  = self.video_durations[eye_state]
+        duration = self.video_durations[eye_state]
         mw.set_key("behaviour_blush_active", True)
         self.node.loginfo("blushing")
         previous_icon_url = self.leds.url
         self.onboard.video = video_url
-        self.speakers.url  = self.server.url_for_sound("love.wav")
+        self.speakers.url = self.server.url_for_sound("love.wav")
         self.leds.load_from_url(self.server.url_for_icon("heartbeat.gif"))
         time.sleep(duration)
         self.onboard.image = self.url_open
@@ -154,7 +154,11 @@ class BehaviourBlush:
                 time.sleep(1.0 / LOOP_RATE)
                 if cooldown_counter > 0:
                     cooldown_counter -= 1
-                if self.behaviours.blush and self.touch_sensors.head_touch() and not self.behaviours.photographer:
+                if (
+                    self.behaviours.blush
+                    and self.touch_sensors.head_touch()
+                    and not self.behaviours.photographer
+                ):
                     if touch_counter < TOUCH_COUNTER_THRESHOLD:
                         touch_counter += 1
                     if touch_counter == TOUCH_COUNTER_THRESHOLD:
