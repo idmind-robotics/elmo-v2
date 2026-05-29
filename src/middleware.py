@@ -221,7 +221,8 @@ class Leds(DBEntry):
                             colors.append(color)
                     frames.append(colors)
             except EOFError:
-                final_color = [[0, 0, 0]] * self.number
+                pass
+            #   final_color = [[0, 0, 0]] * self.number
             #                frames.append(final_color)
             # schedule the publishing of the messages
             time_between_frames = image.info["duration"] / 1000.0
@@ -456,7 +457,7 @@ class Server(DBEntry):
             url = self.url_for_image("")[:-1]
             response = requests.get(url)
             return response.json()
-        except:
+        except Exception:
             return []
 
     def get_sound_list(self):
@@ -464,7 +465,7 @@ class Server(DBEntry):
             url = self.url_for_sound("")[:-1]
             response = requests.get(url)
             return response.json()
-        except:
+        except Exception:
             return []
 
     def get_icon_list(self):
@@ -472,7 +473,7 @@ class Server(DBEntry):
             url = self.url_for_icon("")[:-1]
             response = requests.get(url)
             return response.json()
-        except:
+        except Exception:
             return []
 
     def get_video_list(self):
@@ -480,7 +481,7 @@ class Server(DBEntry):
             url = self.url_for_video("")[:-1]
             response = requests.get(url)
             return response.json()
-        except:
+        except Exception:
             return []
 
 
@@ -518,7 +519,7 @@ def test1():
     manager = NodeManager()
     print(manager.list_nodes())
     print("creating node")
-    node = Node("test")
+    # node = Node("test")
     print("node created")
     print("listing nodes")
     print(manager.list_nodes())

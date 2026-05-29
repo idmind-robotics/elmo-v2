@@ -10,7 +10,7 @@ The onboard webpage also performs speech recognition, which is published to this
 
 import os
 import time
-import json
+
 from flask import Flask, send_from_directory, request, jsonify
 from flask_cors import CORS
 import threading
@@ -19,10 +19,10 @@ from werkzeug.utils import secure_filename
 
 import logging
 
+import middleware as mw
+
 log = logging.getLogger("werkzeug")
 log.setLevel(logging.ERROR)
-
-import middleware as mw
 
 app = Flask(__name__, static_url_path="")
 CORS(app)
