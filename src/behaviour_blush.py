@@ -128,7 +128,7 @@ class BehaviourBlush:
                 self.leds.load_from_url(previous_icon_url)
             else:
                 self.leds.clear()
-        except:
+        except Exception:
             self.leds.clear()
         mw.set_key("behaviour_blush_active", False)
         mw.set_key("sleep_mode_last_interaction", time.time())
