@@ -22,13 +22,14 @@ EYES_OPENED = 1
 EYES_CLOSED = 3
 
 TIMEOUT = 300
-#TIMEOUT = 10
+# TIMEOUT = 10
 
 VIDEO_DURATIONS = {
     "open_dark.mp4": 2.0,
     "dark_open.mp4": 2.0,
     "dark_squint_dark.mp4": 7.0,
 }
+
 
 class SleepMode:
     """
@@ -158,9 +159,8 @@ class SleepMode:
         bool
         """
         try:
-            return (
-                mw.get_key("behaviour_blush_active")
-                or mw.get_key("behaviour_hello_active")
+            return mw.get_key("behaviour_blush_active") or mw.get_key(
+                "behaviour_hello_active"
             )
         except TypeError:
             return False
@@ -186,35 +186,39 @@ class SleepMode:
             mw.set_key("sleep_mode_eye_state", eye_state)
 
     def play_video(self, filename, then_image_url=None, restore=True):
-            """
-            Play a transition video and wait for it to finish.
+        """
+        Play a transition video and wait for it to finish.
 
-            Uses known clip duration as timing fallback since Onboard does not
-            expose a video_playing flag.
+        Uses known clip duration as timing fallback since Onboard does not
+        expose a video_playing flag.
 
-            Parameters
-            ----------
-            filename : str
-                Video filename (e.g. "dark_open.mp4").
-            then_image_url : str, optional
-                Static image URL to restore after playback. Defaults to normal.png.
-                Only used when restore=True.
-            restore : bool, optional
-                If True (default), sets a static image after the video ends.
-                Set to False when the video already ends on the correct frame —
-                forcing an image while the video is still playing would interrupt
-                it mid-frame and cause a visual double-play artifact.
-            """
-            self.playing_video = True
-            self.display.video = self.video_urls[filename]
-            if hasattr(self.display, "video_playing"):
-                while self.display.video_playing:
-                    time.sleep(0.05)
-            else:
-                time.sleep(VIDEO_DURATIONS.get(filename, 3.0))
-            if restore:
-                self.display.image = then_image_url if then_image_url is not None else self.server.url_for_image("normal.png")
-            self.playing_video = False
+        Parameters
+        ----------
+        filename : str
+            Video filename (e.g. "dark_open.mp4").
+        then_image_url : str, optional
+            Static image URL to restore after playback. Defaults to normal.png.
+            Only used when restore=True.
+        restore : bool, optional
+            If True (default), sets a static image after the video ends.
+            Set to False when the video already ends on the correct frame —
+            forcing an image while the video is still playing would interrupt
+            it mid-frame and cause a visual double-play artifact.
+        """
+        self.playing_video = True
+        self.display.video = self.video_urls[filename]
+        if hasattr(self.display, "video_playing"):
+            while self.display.video_playing:
+                time.sleep(0.05)
+        else:
+            time.sleep(VIDEO_DURATIONS.get(filename, 3.0))
+        if restore:
+            self.display.image = (
+                then_image_url
+                if then_image_url is not None
+                else self.server.url_for_image("normal.png")
+            )
+        self.playing_video = False
 
     def eyes_closing(self):
         """
@@ -239,7 +243,9 @@ class SleepMode:
         Plays dark_open.mp4 then restores the open static image.
         Publishes EYES_OPENED and resets the activity timer.
         """
-        self.play_video("dark_open.mp4", then_image_url=self.server.url_for_image("normal.png"))
+        self.play_video(
+            "dark_open.mp4", then_image_url=self.server.url_for_image("normal.png")
+        )
         self.current_state = "open"
         mw.set_key("sleep_mode_eye_state", EYES_OPENED)
         self.last_activity = time.time()
@@ -312,7 +318,9 @@ class SleepMode:
                     else:
                         self.eyes_look_around()
                 else:
-                    self.set_image(self.server.url_for_image("normal.png"), "open", EYES_OPENED)
+                    self.set_image(
+                        self.server.url_for_image("normal.png"), "open", EYES_OPENED
+                    )
             else:
                 if self.current_state != "open":
                     if self.current_state == "dark":
