@@ -49,7 +49,7 @@ class BehaviourClock:
         self.battery = mw.Battery()
         self.city = self.get_city()
 
-    def is_blush_active(self):
+    def get_blush_activity(self):
         """
         Check whether the blush behaviour is currently active.
 
@@ -62,6 +62,47 @@ class BehaviourClock:
             return bool(mw.get_key("behaviour_blush_active"))
         except (TypeError, ValueError):
             return False
+
+    def get_weather(self):
+        """
+        Fetch current weather from wttr.in for the configured city.
+
+        Behavior
+        --------
+        - Queries wttr.in JSON API.
+        - Matches the closest hourly entry to the current hour.
+        - Maps weather description to one of the display icon keys.
+        - Falls back to (88, "no_internet") on any error.
+
+        Returns
+        -------
+        tuple[int, str]
+            Temperature in Celsius and weather icon key string.
+        """
+        url = f"https://wttr.in/{self.city}?format=j1"
+        try:
+            data = requests.get(url, timeout=5).json()
+            now_hour = datetime.now().hour
+            hourly = data["weather"][0]["hourly"]
+            closest = min(hourly, key=lambda h: abs(int(h["time"]) // 100 - now_hour))
+            temp = int(closest["tempC"])
+            desc = data["current_condition"][0]["weatherDesc"][0]["value"].lower()
+
+            if "thunder" in desc:
+                icon = "storm"
+            elif "rain" in desc or "drizzle" in desc:
+                icon = "rain"
+            elif "cloud" in desc or "overcast" in desc:
+                icon = "night_partly" if self.is_night() else "cloud"
+            elif "sun" in desc or "clear" in desc or "sunny" in desc:
+                icon = "night_clear" if self.is_night() else "clear"
+            else:
+                icon = "night_partly" if self.is_night() else "partly"
+
+            return temp, icon
+
+        except:
+            return 88, "no_internet"
 
     def get_city(self):
             """
@@ -126,47 +167,6 @@ class BehaviourClock:
         self.leds.draw_digit(bottom, m[1], 5, 0)
 
         return self.leds.merge_halves(top, bottom)
-
-    def get_weather(self):
-        """
-        Fetch current weather from wttr.in for the configured city.
-
-        Behavior
-        --------
-        - Queries wttr.in JSON API.
-        - Matches the closest hourly entry to the current hour.
-        - Maps weather description to one of the display icon keys.
-        - Falls back to (88, "no_internet") on any error.
-
-        Returns
-        -------
-        tuple[int, str]
-            Temperature in Celsius and weather icon key string.
-        """
-        url = f"https://wttr.in/{self.city}?format=j1"
-        try:
-            data = requests.get(url, timeout=5).json()
-            now_hour = datetime.now().hour
-            hourly = data["weather"][0]["hourly"]
-            closest = min(hourly, key=lambda h: abs(int(h["time"]) // 100 - now_hour))
-            temp = int(closest["tempC"])
-            desc = data["current_condition"][0]["weatherDesc"][0]["value"].lower()
-
-            if "thunder" in desc:
-                icon = "storm"
-            elif "rain" in desc or "drizzle" in desc:
-                icon = "rain"
-            elif "cloud" in desc or "overcast" in desc:
-                icon = "night_partly" if self.is_night() else "cloud"
-            elif "sun" in desc or "clear" in desc or "sunny" in desc:
-                icon = "night_clear" if self.is_night() else "clear"
-            else:
-                icon = "night_partly" if self.is_night() else "partly"
-
-            return temp, icon
-
-        except:
-            return 88, "no_internet"
 
     def generate_weather_image(self):
         """
@@ -283,13 +283,13 @@ class BehaviourClock:
         bool
             True if the fade completed, False if interrupted by blush.
         """
-        if self.is_blush_active():
+        if self.get_blush_activity():
             self.leds.clear()
             return False
         self.leds.load_from_image(img_from)
         self.leds.request_fade(img_to, steps=steps, duration=duration)
         while self.leds.fade_active:
-            if self.is_blush_active():
+            if self.get_blush_activity():
                 self.leds.fade_active = False
                 self.leds.clear()
                 return False
@@ -308,7 +308,7 @@ class BehaviourClock:
           updates every 100ms, fades out.
         - Aborts at any step if blush becomes active.
         """
-        if self.is_blush_active():
+        if self.get_blush_activity():
             return
         img_black = self.leds.create_canvas()
         clock_img = self.generate_clock_image()
@@ -329,7 +329,7 @@ class BehaviourClock:
         last_pct = max(0, min(100, int(self.battery.percentage)))
         hold_end = time.time() + 1.5
         while time.time() < hold_end:
-            if self.is_blush_active():
+            if self.get_blush_activity():
                 self.leds.clear()
                 return
             current_pct = max(0, min(100, int(self.battery.percentage)))
@@ -358,7 +358,7 @@ class BehaviourClock:
         try:
             while not self.node.is_shutdown():
                 time.sleep(0.1)
-                if self.is_blush_active():
+                if self.get_blush_activity():
                     continue
                 if not self.behaviours.clock:
                     continue
