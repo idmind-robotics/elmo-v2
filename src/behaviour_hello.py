@@ -21,6 +21,14 @@ ABSENT_FRAMES = 3
 FRAME_W = 640
 FRAME_H = 480
 
+EYES_OPENED = 1
+EYES_CLOSED = 3
+
+VIDEO_MAP = {
+    EYES_OPENED: ("open_hello_open.mp4", 5.3),
+    EYES_CLOSED: ("dark_hello_open.mp4", 5.2),
+}
+
 
 class BehaviourHello:
     """
@@ -55,6 +63,10 @@ class BehaviourHello:
 
     ``running : bool`` : Flag used to signal the reader thread to stop when the behaviour shuts down.
 
+    ``video_urls : dict`` : Pre-resolved URLs for each hello transition video, keyed by eye state.
+
+    ``video_durations : dict`` : Durations in seconds for each video, keyed by eye state.
+
     ``smooth_cx : float`` : Exponentially smoothed horizontal face centre position (set on first track call).
 
     ``smooth_cy : float`` : Exponentially smoothed vertical face centre position (set on first track call).
@@ -69,12 +81,21 @@ class BehaviourHello:
         self.node = mw.Node("behaviour_hello")
         self.pan = mw.Pan()
         self.tilt = mw.Tilt()
+        self.onboard = mw.Onboard()
         self.detector = cv2.FaceDetectorYN.create('/home/idmind/elmo-v2/src/yunet.onnx', '', (FRAME_W, FRAME_H))
         self.stream = cv2.VideoCapture("http://localhost:8080/stream.mjpg")
         self.latest_frame = None
-        self.onboard = mw.Onboard()
         self.lock = threading.Lock()
         self.running = True
+        self.smooth_cx = None
+        self.smooth_cy = None
+
+        self.video_urls = {}
+        self.video_durations = {}
+        for eye_state, (filename, duration) in VIDEO_MAP.items():
+            self.video_urls[eye_state] = self.server.url_for_video(filename)
+            self.video_durations[eye_state] = duration
+
         t = threading.Thread(target=self.reader, daemon=True)
         t.start()
         time.sleep(2)
@@ -141,9 +162,16 @@ class BehaviourHello:
         Update pan and tilt servo targets to keep the detected face centred in frame.
 
         Applies exponential smoothing (alpha=0.4) to the raw face position before
-        computing the tracking error. A dead-band of ±8 % of frame width/height
-        suppresses small jitter. The resulting angle adjustments are clamped to each
-        servo's hardware limits before being written.
+        computing the tracking error. Alpha is the smoothing factor for the exponential 
+        moving average applied to the raw face position. With alpha = 0.4, each new frame
+        contributes 40% to the smoothed position, while the previous 60% carries over.
+        This means:
+        - Higher alpha (→ 1.0) — tracks faster, but jittery; the servos react sharply to
+        every detected position twitch.
+        - Lower alpha (→ 0.0) — very smooth, but sluggish; the servos lag behind a moving 
+        face. 
+        A dead-band of ±8 % of frame width/height suppresses small jitter. The resulting 
+        angle adjustments are clamped to each servo's hardware limits before being written.
 
         Parameters
         ----------
@@ -157,7 +185,7 @@ class BehaviourHello:
         None
         """
         alpha = 0.4
-        if not hasattr(self, 'smooth_cx'):
+        if self.smooth_cx is None:
             self.smooth_cx = float(cx)
             self.smooth_cy = float(cy)
         self.smooth_cx = alpha * float(cx) + (1 - alpha) * self.smooth_cx
@@ -182,6 +210,43 @@ class BehaviourHello:
 
         self.pan.angle = new_pan
         self.tilt.angle = new_tilt
+
+
+    def sleep_mode_state(self):
+        """
+        Read the current eye state from sleep_mode's Redis semaphore.
+
+        Returns
+        -------
+        int
+            EYES_OPENED (1) or EYES_CLOSED (3).
+            Defaults to EYES_OPENED if the key is missing or unreadable.
+        """
+        try:
+            return int(mw.get_key("sleep_mode_eye_state"))
+        except (TypeError, ValueError):
+            return EYES_OPENED
+
+
+    def hello(self):
+        """
+        Execute the greeting animation.
+
+        Reads sleep_mode_eye_state to pick the correct transition video.
+        Sets behaviour_hello_active so sleep_mode yields the display,
+        plays the video and greeting sound, then restores open.png.
+        Signals sleep_mode_last_interaction on completion.
+        """
+        sounds = ['hello.wav', 'hello2.wav', 'hello3.wav']
+        chosen = sounds[int(time.time()) % len(sounds)]
+        mw.set_key("behaviour_hello_active", True)
+        self.onboard.video = self.video_urls[self.sleep_mode_state()]
+        self.node.loginfo(f"Face detected - playing {chosen}")
+        self.speakers.url = self.server.url_for_sound(chosen)
+        time.sleep(self.video_durations[self.sleep_mode_state()])
+        self.onboard.image = self.server.url_for_image("open.png")
+        mw.set_key("behaviour_hello_active", False)
+        mw.set_key("sleep_mode_last_interaction", time.time())
 
 
     def run(self):
@@ -237,16 +302,7 @@ class BehaviourHello:
                         face_detected = True
                         if now - last_greeted > COOLDOWN:
                             self.node.loginfo("Face detected.")
-                            image_url = self.server.url_for_image("happy.png")
-                            self.onboard.image = image_url
-                            # selects one of the three files and plays that sound.
-                            sounds = ['hello.wav', 'hello2.wav', 'hello3.wav']
-                            chosen = sounds[int(time.time()) % len(sounds)]
-                            self.node.loginfo(f"Face detected - playing {chosen}")
-                            self.speakers.url = self.server.url_for_sound(chosen)
-                            time.sleep(3.0)
-                            image_url = self.server.url_for_image("normal.png")
-                            self.onboard.image = image_url
+                            self.hello()
                             last_greeted = now
                     if face_detected:
                         self.track_face(cx, cy)
@@ -257,6 +313,7 @@ class BehaviourHello:
                         self.node.loginfo("Face gone.")
                         face_detected = False
         finally:
+            mw.set_key("behaviour_hello_active", False)
             self.running = False
             self.stream.release()
             self.node.shutdown()
