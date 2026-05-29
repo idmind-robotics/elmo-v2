@@ -380,6 +380,7 @@ class Onboard(DBEntry):
         "video": None,
         "speech": None,
         "log": None,
+        "touch": False,
     }
 
 
