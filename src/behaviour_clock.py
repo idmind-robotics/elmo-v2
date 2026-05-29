@@ -63,6 +63,41 @@ class BehaviourClock:
         except (TypeError, ValueError):
             return False
 
+    def get_city(self):
+        """
+        Retrieve city from Redis, or infer it from the system timezone as fallback.
+
+        Returns
+        -------
+        str
+            City name used for weather queries.
+        """
+        try:
+            return mw.get_key("city")
+        except (TypeError, ValueError):
+            tz_map = {
+                "GMT": "Lisbon",
+                "WET": "Lisbon",
+                "CET": "Paris",
+                "EST": "New York",
+                "EDT": "New York",
+                "PST": "Los Angeles",
+                "PDT": "Los Angeles",
+            }
+            return tz_map.get(time.tzname[0], "Lisbon")
+
+    def get_night(self):
+        """
+        Determine whether it is currently night time.
+
+        Returns
+        -------
+        bool
+            True if current hour is before 07:00 or from 20:00 onwards.
+        """
+        h = datetime.now().hour
+        return h < 7 or h >= 20
+
     def get_weather(self):
         """
         Fetch current weather from wttr.in for the configured city.
@@ -105,41 +140,6 @@ class BehaviourClock:
         except Exception:
             return None, "no_internet"
 
-    def get_city(self):
-        """
-        Retrieve city from Redis, or infer it from the system timezone as fallback.
-
-        Returns
-        -------
-        str
-            City name used for weather queries.
-        """
-        try:
-            return mw.get_key("city")
-        except (TypeError, ValueError):
-            tz_map = {
-                "GMT": "Lisbon",
-                "WET": "Lisbon",
-                "CET": "Paris",
-                "EST": "New York",
-                "EDT": "New York",
-                "PST": "Los Angeles",
-                "PDT": "Los Angeles",
-            }
-            return tz_map.get(time.tzname[0], "Lisbon")
-
-    def get_night(self):
-        """
-        Determine whether it is currently night time.
-
-        Returns
-        -------
-        bool
-            True if current hour is before 07:00 or from 20:00 onwards.
-        """
-        h = datetime.now().hour
-        return h < 7 or h >= 20
-
     def show_clock(self):
         """
         Generate the clock display image using the half-half layout.
@@ -176,7 +176,7 @@ class BehaviourClock:
         --------
         - Top half: weather condition icon.
         - Bottom half: temperature digits, degree dot, and "C" label.
-          Skipped entirely when there is no internet connection.
+        Skipped entirely when there is no internet connection.
         - Halves are merged into a full 13x13 canvas.
 
         Returns
@@ -306,7 +306,7 @@ class BehaviourClock:
         - Fades in the clock image, holds for 1.5 seconds, fades out.
         - Fades in the weather image, holds for 1.5 seconds, fades out.
         - Fades in the battery image, holds for 1.5 seconds with live percentage
-          updates every 100ms, fades out.
+        updates every 100ms, fades out.
         - Aborts at any step if blush becomes active.
         """
         if self.get_blush_activity():
