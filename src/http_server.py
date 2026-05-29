@@ -93,6 +93,12 @@ def onboard_log():
     return jsonify({})
 
 
+@app.route("/api/touch", methods=["POST"])
+def touch():
+    onboard.touch = True
+    return jsonify({})
+
+
 @app.route("/icons", methods=["GET", "POST"])
 def icons():
     if request.method == "GET":
