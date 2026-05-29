@@ -8,7 +8,6 @@ Also, when the face moves, the robot's head turns and follows it.
 
 """
 
-
 import time
 import cv2
 import middleware as mw
@@ -82,7 +81,9 @@ class BehaviourHello:
         self.pan = mw.Pan()
         self.tilt = mw.Tilt()
         self.onboard = mw.Onboard()
-        self.detector = cv2.FaceDetectorYN.create('/home/idmind/elmo-v2/src/yunet.onnx', '', (FRAME_W, FRAME_H))
+        self.detector = cv2.FaceDetectorYN.create(
+            "/home/idmind/elmo-v2/src/yunet.onnx", "", (FRAME_W, FRAME_H)
+        )
         self.stream = cv2.VideoCapture("http://localhost:8080/stream.mjpg")
         self.latest_frame = None
         self.lock = threading.Lock()
@@ -100,7 +101,6 @@ class BehaviourHello:
         t.start()
         time.sleep(2)
         self.node.loginfo("Camera ready.")
-
 
     def reader(self):
         """
@@ -122,7 +122,6 @@ class BehaviourHello:
             if ret:
                 with self.lock:
                     self.latest_frame = frame
-
 
     def detect_face(self):
         """
@@ -156,21 +155,20 @@ class BehaviourHello:
         cy = y + h / 2
         return True, cx, cy
 
-
     def track_face(self, cx, cy):
         """
         Update pan and tilt servo targets to keep the detected face centred in frame.
 
         Applies exponential smoothing (alpha=0.4) to the raw face position before
-        computing the tracking error. Alpha is the smoothing factor for the exponential 
+        computing the tracking error. Alpha is the smoothing factor for the exponential
         moving average applied to the raw face position. With alpha = 0.4, each new frame
         contributes 40% to the smoothed position, while the previous 60% carries over.
         This means:
         - Higher alpha (→ 1.0) — tracks faster, but jittery; the servos react sharply to
         every detected position twitch.
-        - Lower alpha (→ 0.0) — very smooth, but sluggish; the servos lag behind a moving 
-        face. 
-        A dead-band of ±8 % of frame width/height suppresses small jitter. The resulting 
+        - Lower alpha (→ 0.0) — very smooth, but sluggish; the servos lag behind a moving
+        face.
+        A dead-band of ±8 % of frame width/height suppresses small jitter. The resulting
         angle adjustments are clamped to each servo's hardware limits before being written.
 
         Parameters
@@ -211,7 +209,6 @@ class BehaviourHello:
         self.pan.angle = new_pan
         self.tilt.angle = new_tilt
 
-
     def sleep_mode_state(self):
         """
         Read the current eye state from sleep_mode's Redis semaphore.
@@ -227,7 +224,6 @@ class BehaviourHello:
         except (TypeError, ValueError):
             return EYES_OPENED
 
-
     def hello(self):
         """
         Execute the greeting animation.
@@ -237,7 +233,7 @@ class BehaviourHello:
         plays the video and greeting sound, then restores open.png.
         Signals sleep_mode_last_interaction on completion.
         """
-        sounds = ['hello.wav', 'hello2.wav', 'hello3.wav']
+        sounds = ["hello.wav", "hello2.wav", "hello3.wav"]
         chosen = sounds[int(time.time()) % len(sounds)]
         mw.set_key("behaviour_hello_active", True)
         self.onboard.video = self.video_urls[self.sleep_mode_state()]
@@ -248,7 +244,6 @@ class BehaviourHello:
         mw.set_key("behaviour_hello_active", False)
         mw.set_key("sleep_mode_last_interaction", time.time())
 
-
     def run(self):
         """
         Main behaviour loop.
@@ -256,7 +251,7 @@ class BehaviourHello:
         Enables pan and tilt servos, then polls the camera at ~10 Hz. On each tick:
         - Skips processing if the photographer behaviour is active.
         - Accumulates consecutive detection frames; after CONFIRM_FRAMES a face is
-          considered present and a greeting sound is played (subject to COOLDOWN).
+        considered present and a greeting sound is played (subject to COOLDOWN).
         - Calls track_face() every tick while a face is confirmed present.
         - After ABSENT_FRAMES consecutive misses the face is considered gone.
 
