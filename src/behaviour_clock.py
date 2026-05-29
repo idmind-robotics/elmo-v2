@@ -13,8 +13,6 @@ from datetime import datetime
 import middleware as mw
 import requests
 
-CITY = None
-
 
 class BehaviourClock:
     """
@@ -49,9 +47,7 @@ class BehaviourClock:
         self.touch_sensors = mw.TouchSensors()
         self.behaviours = mw.Behaviours()
         self.battery = mw.Battery()
-
-        global CITY
-        CITY = self.get_city()
+        self.city = self.get_city()
 
     def is_blush_active(self):
         """
@@ -67,39 +63,28 @@ class BehaviourClock:
         except (TypeError, ValueError):
             return False
 
-    def detect_city_by_timezone(self):
-        """
-        Infer city from the system timezone name.
-
-        Returns
-        -------
-        str
-            City name, defaulting to "Lisbon" if timezone is unknown.
-        """
-        tz = time.tzname[0]
-        tz_map = {
-            "GMT": "Lisbon",
-            "WET": "Lisbon",
-            "CET": "Paris",
-            "EST": "New York",
-            "EDT": "New York",
-            "PST": "Los Angeles",
-            "PDT": "Los Angeles",
-        }
-        return tz_map.get(tz, "Lisbon")
-
     def get_city(self):
-        """
-        Retrieve city from Redis or fall back to timezone detection.
+            """
+            Retrieve city from Redis, or infer it from the system timezone as fallback.
 
-        Returns
-        -------
-        str
-            City name used for weather queries.
-        """
-        if mw.has_key("city"):
-            return mw.get_key("city")
-        return self.detect_city_by_timezone()
+            Returns
+            -------
+            str
+                City name used for weather queries.
+            """
+            try:
+                return mw.get_key("city")
+            except (TypeError, ValueError):
+                tz_map = {
+                    "GMT": "Lisbon",
+                    "WET": "Lisbon",
+                    "CET": "Paris",
+                    "EST": "New York",
+                    "EDT": "New York",
+                    "PST": "Los Angeles",
+                    "PDT": "Los Angeles",
+                }
+                return tz_map.get(time.tzname[0], "Lisbon")
 
     def is_night(self):
         """
@@ -253,8 +238,10 @@ class BehaviourClock:
             icon_key = "level_9"
         else:
             icon_key = "level_10"
+
         top = self.leds.create_top_canvas()
         self.leds.draw_icon(top, "battery_icons", icon_key)
+
         bottom = self.leds.create_bottom_canvas()
         p_str = str(pct_int)
         if len(p_str) == 1:
@@ -303,7 +290,7 @@ class BehaviourClock:
         self.leds.request_fade(img_to, steps=steps, duration=duration)
         while self.leds.fade_active:
             if self.is_blush_active():
-                self.leds.fade_active = False  # signal driver_leds to abort
+                self.leds.fade_active = False
                 self.leds.clear()
                 return False
             time.sleep(0.05)
@@ -318,7 +305,7 @@ class BehaviourClock:
         - Fades in the clock image, holds for 1.5 seconds, fades out.
         - Fades in the weather image, holds for 1.5 seconds, fades out.
         - Fades in the battery image, holds for 1.5 seconds with live percentage
-        updates every 100ms, fades out.
+          updates every 100ms, fades out.
         - Aborts at any step if blush becomes active.
         """
         if self.is_blush_active():
@@ -339,7 +326,6 @@ class BehaviourClock:
         battery_img = self.generate_battery_image()
         if not self.fade_images(img_black, battery_img, steps=15, duration=1):
             return
-        # Hold for 5 seconds, redrawing immediately whenever percentage changes
         last_pct = max(0, min(100, int(self.battery.percentage)))
         hold_end = time.time() + 1.5
         while time.time() < hold_end:
