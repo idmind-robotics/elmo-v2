@@ -34,6 +34,8 @@ class BehaviourClock:
 
     ``battery : mw.Battery`` : Middleware battery state used to read charge percentage.
 
+    ``city : str`` : City name used for weather queries.
+
     > ## Functions
     """
 
@@ -51,37 +53,6 @@ class BehaviourClock:
         global CITY
         CITY = self.get_city()
 
-    def get_key(self, key):
-        """
-        Safely retrieve a Redis key via middleware.
-
-        Parameters
-        ----------
-        key : str
-            Redis key name.
-
-        Returns
-        -------
-        any
-            Parsed value, or False if key does not exist.
-        """
-        if not mw.has_key(key):
-            return False
-        return mw.get_key(key)
-
-    def set_key(self, key, value):
-        """
-        Set a Redis key via middleware.
-
-        Parameters
-        ----------
-        key : str
-            Redis key name.
-        value : any
-            Value to store.
-        """
-        mw.set_key(key, value)
-
     def is_blush_active(self):
         """
         Check whether the blush behaviour is currently active.
@@ -91,7 +62,10 @@ class BehaviourClock:
         bool
             True if blush is active and LEDs are reserved.
         """
-        return bool(self.get_key("behaviour_blush_active"))
+        try:
+            return bool(mw.get_key("behaviour_blush_active"))
+        except (TypeError, ValueError):
+            return False
 
     def detect_city_by_timezone(self):
         """
@@ -177,14 +151,14 @@ class BehaviourClock:
         - Queries wttr.in JSON API.
         - Matches the closest hourly entry to the current hour.
         - Maps weather description to one of the display icon keys.
-        - Falls back to (20, "no_internet") on any error.
+        - Falls back to (88, "no_internet") on any error.
 
         Returns
         -------
         tuple[int, str]
             Temperature in Celsius and weather icon key string.
         """
-        url = f"https://wttr.in/{CITY}?format=j1"
+        url = f"https://wttr.in/{self.city}?format=j1"
         try:
             data = requests.get(url, timeout=5).json()
             now_hour = datetime.now().hour
@@ -396,7 +370,7 @@ class BehaviourClock:
         """
         self.node.loginfo("behaviour start")
         try:
-            while not self.get_key(self.node.name + "is_shutdown"):
+            while not self.node.is_shutdown():
                 time.sleep(0.1)
                 if self.is_blush_active():
                     continue
