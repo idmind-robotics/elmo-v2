@@ -55,6 +55,7 @@ class BehaviourWifiConnect:
 
     > ## Functions
     """
+
     def __init__(self):
         """
         Initialize middleware objects and state tracking variables.
@@ -88,7 +89,9 @@ class BehaviourWifiConnect:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(5)
             sock.connect(("127.0.0.1", 8080))
-            sock.sendall(b"GET /stream.mjpg HTTP/1.0\r\nHost: 127.0.0.1:8080\r\nConnection: close\r\n\r\n")
+            sock.sendall(
+                b"GET /stream.mjpg HTTP/1.0\r\nHost: 127.0.0.1:8080\r\nConnection: close\r\n\r\n"
+            )
             buf = b""
             while True:
                 chunk = sock.recv(65536)
@@ -101,16 +104,18 @@ class BehaviourWifiConnect:
                 end = buf.find(b"\r\n", cl_idx)
                 if end == -1:
                     continue
-                length = int(buf[cl_idx + 15:end].strip())
+                length = int(buf[cl_idx + 15 : end].strip())
                 sep = buf.find(b"\r\n\r\n", cl_idx)
                 if sep == -1:
                     continue
                 data_start = sep + 4
                 if len(buf) < data_start + length:
                     continue
-                jpg = buf[data_start:data_start + length]
+                jpg = buf[data_start : data_start + length]
                 sock.close()
-                return cv2.imdecode(np.frombuffer(jpg, dtype=np.uint8), cv2.IMREAD_COLOR)
+                return cv2.imdecode(
+                    np.frombuffer(jpg, dtype=np.uint8), cv2.IMREAD_COLOR
+                )
             sock.close()
         except Exception:
             pass
@@ -125,7 +130,7 @@ class BehaviourWifiConnect:
         - First attempts detection with WeChat QR code detector (handles fancy QR codes).
         - Falls back to pyzbar with multiple preprocessing strategies if WeChat fails.
         - Preprocessing includes: grayscale, upscaling, thresholding, CLAHE enhancement,
-          sharpening, inversion, and adaptive thresholding.
+        sharpening, inversion, and adaptive thresholding.
 
         Parameters
         ----------
@@ -142,9 +147,11 @@ class BehaviourWifiConnect:
             detector = cv2.wechat_qrcode_WeChatQRCode()
             texts, _ = detector.detectAndDecode(frame)
             if texts:
+
                 class QR:
                     def __init__(self, text):
                         self.data = text.encode("utf-8")
+
                 return [QR(t) for t in texts if t]
         except Exception:
             pass
@@ -156,14 +163,21 @@ class BehaviourWifiConnect:
         kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
 
         candidates = [
-            gray, gray2x,
+            gray,
+            gray2x,
             cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1],
             cv2.threshold(gray2x, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1],
-            clahe.apply(gray), clahe.apply(gray2x),
-            cv2.filter2D(gray, -1, kernel), cv2.filter2D(gray2x, -1, kernel),
+            clahe.apply(gray),
+            clahe.apply(gray2x),
+            cv2.filter2D(gray, -1, kernel),
+            cv2.filter2D(gray2x, -1, kernel),
             cv2.bitwise_not(gray),
-            cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2),
-            cv2.adaptiveThreshold(gray2x, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2),
+            cv2.adaptiveThreshold(
+                gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
+            ),
+            cv2.adaptiveThreshold(
+                gray2x, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
+            ),
         ]
         for img in candidates:
             result = decode(img)
@@ -283,7 +297,8 @@ class BehaviourWifiConnect:
             # if already connected to this SSID, return success immediately
             result = subprocess.run(
                 ["sudo", "nmcli", "-t", "-f", "active,ssid", "dev", "wifi"],
-                capture_output=True, text=True,
+                capture_output=True,
+                text=True,
             )
             for line in result.stdout.splitlines():
                 if line.startswith("yes:") and line.split(":")[1] == ssid:
@@ -291,7 +306,8 @@ class BehaviourWifiConnect:
 
             result = subprocess.run(
                 ["sudo", "nmcli", "dev", "wifi", "rescan"],
-                capture_output=True, text=True,
+                capture_output=True,
+                text=True,
             )
             if result.returncode != 0:
                 return False, result.stderr
@@ -301,7 +317,16 @@ class BehaviourWifiConnect:
             if security_type in ("nopass", ""):
                 cmd = ["sudo", "nmcli", "dev", "wifi", "connect", ssid]
             else:
-                cmd = ["sudo", "nmcli", "dev", "wifi", "connect", ssid, "password", password]
+                cmd = [
+                    "sudo",
+                    "nmcli",
+                    "dev",
+                    "wifi",
+                    "connect",
+                    ssid,
+                    "password",
+                    password,
+                ]
 
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode != 0:
@@ -309,7 +334,8 @@ class BehaviourWifiConnect:
 
             result = subprocess.run(
                 ["sudo", "nmcli", "-t", "-f", "active,ssid", "dev", "wifi"],
-                capture_output=True, text=True,
+                capture_output=True,
+                text=True,
             )
             for line in result.stdout.splitlines():
                 if line.startswith("yes:"):
@@ -317,7 +343,8 @@ class BehaviourWifiConnect:
                     # delete the saved profile immediately so it doesn't persist
                     subprocess.run(
                         ["sudo", "nmcli", "connection", "delete", ssid],
-                        capture_output=True, text=True,
+                        capture_output=True,
+                        text=True,
                     )
                     return True, connected_ssid
             return False, "Failed to connect to WiFi network"
@@ -334,7 +361,7 @@ class BehaviourWifiConnect:
         - On enable: disables test_motors and look_around, shows camera stream.
         - On disable: restores previously active behaviours, hides camera stream.
         - While active: reads frames, detects QR codes, parses WiFi credentials,
-          attempts connection, displays status messages.
+        attempts connection, displays status messages.
         - Exits wifi_connect mode after successful connection or on user cancel.
         - Shuts down node in finally block.
         """
@@ -374,7 +401,9 @@ class BehaviourWifiConnect:
                             self.onboard.image = None
                             self.onboard.text = "Connecting to WiFi network..."
                             ssid, password, security_type = self.parse_wifi_qr(decoded)
-                            success, message = self.try_connect_to_wifi(ssid, password, security_type)
+                            success, message = self.try_connect_to_wifi(
+                                ssid, password, security_type
+                            )
                             if success:
                                 self.onboard.image = None
                                 self.onboard.text = f"Connected to {message}"
