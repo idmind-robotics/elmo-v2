@@ -93,11 +93,11 @@ class BehaviourClock:
             elif "rain" in desc or "drizzle" in desc:
                 icon = "rain"
             elif "cloud" in desc or "overcast" in desc:
-                icon = "night_partly" if self.is_night() else "cloud"
+                icon = "night_partly" if self.get_night() else "cloud"
             elif "sun" in desc or "clear" in desc or "sunny" in desc:
-                icon = "night_clear" if self.is_night() else "clear"
+                icon = "night_clear" if self.get_night() else "clear"
             else:
-                icon = "night_partly" if self.is_night() else "partly"
+                icon = "night_partly" if self.get_night() else "partly"
 
             return temp, icon
 
@@ -127,7 +127,7 @@ class BehaviourClock:
                 }
                 return tz_map.get(time.tzname[0], "Lisbon")
 
-    def is_night(self):
+    def get_night(self):
         """
         Determine whether it is currently night time.
 
