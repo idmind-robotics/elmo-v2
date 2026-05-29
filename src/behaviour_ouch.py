@@ -3,7 +3,7 @@
 Behaviour node.
 
 When a screen touch is detected, the robot plays the ouch_tears_open
-animation: eyes go to ouch expression, then tears, then back to open.
+animation: eyes go to ouch expression, then tears, then back to normal.
 
 Touch detection is handled via the browser (touchstart event in main.js)
 which POSTs to /api/touch, setting onboard.touch = True in Redis.
@@ -65,7 +65,7 @@ class BehaviourOuch:
 
         Sets behaviour_ouch_active so that sleep_mode yields the display,
         plays ouch_tears_open.mp4, waits for the video to finish, then
-        restores open.png and signals sleep_mode to reset its inactivity
+        restores normal.png and signals sleep_mode to reset its inactivity
         timer before clearing the active flag.
 
         Parameters
