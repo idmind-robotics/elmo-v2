@@ -1,11 +1,52 @@
-## Companion App
+# TAGI Companion App
 
-In this repository, under `app/` is the source code for TAGI's companion app. The app was developed using PyQT5 and QTDesigner, under Ubuntu 18.04. You can run the app using the `app/dev.sh` script, or build the application using `app/build.sh`. Resolve dependencies as they appear, using pip.
+## Overview
 
-Alternatively, you can request a prebuilt version by email.
+The Companion App is built with **PyQt5** and **Qt Designer**, and is supported on **Windows 11** and **Ubuntu** (up to 26.04).
 
-The Companion App will attempt to discover any TAGIs on the network using UDP broadcast. After finding your TAGI, you can click the button to connect to it and use the application to explore and test different functionalities of the robot. 
+---
 
-Also, take note of the robot's IP, since you will probably want to SSH into it for development, at some time.
+## Getting Started
 
-The App communicates with TAGI via a REST API, which is also a decent way to control the robot.
+### Running the App
+
+Make sure you have **uv** installed, as it will handle all Python dependencies automatically.
+
+**Linux:**
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+**Windows:**
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+Then, inside the `app/` folder, simply run:
+```bash
+uv run src/app.py
+```
+
+> **Note:** `build.sh` is only needed if you want to generate a standalone distributable.
+
+## Connecting to TAGI
+
+The Companion App automatically discovers TAGI robots on the local network using **UDP broadcast**.
+
+Once your TAGI is found:
+1. Click the **Connect** button to establish a connection.
+2. Use the app to explore and test different robot functionalities.
+
+> **Tip:** Take note of the robot's IP address — you'll likely want to **SSH into it** for development purposes.
+
+---
+
+### Prebuilt Version
+
+If you'd prefer not to build from source, you can **request a prebuilt version by email**.
+
+---
+
+## Communication
+
+The app communicates with TAGI via a **REST API**, which is also a convenient way to control the robot directly, independently of the app.
