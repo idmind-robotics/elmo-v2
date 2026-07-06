@@ -1,0 +1,15 @@
+[project]
+name = "TAGI-App"
+version = "1.3.0"
+description = "Companion App for TAGI. It can be used to test all the hardware features of TAGI and also provides a user interface for users to interact with TAGI."
+readme = "README.md"
+requires-python = ">3.10, <3.14"
+dependencies = [
+    "requests>=2.32.5",
+    "PyQt5>=5.15.0",
+    "netifaces-plus>=0.12.5"
+]
+[tool.uv]
+    required-environments = [
+        "sys_platform == 'win32' and platform_machine == 'AMD64'",
+]
