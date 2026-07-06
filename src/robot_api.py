@@ -138,6 +138,8 @@ class Robot:
         return True, "OK"
 
     def update_motor_limits(self, pan_min, pan_max, tilt_min, tilt_max):
+        if pan_min >= pan_max or tilt_min >= tilt_max:
+            return False, "min must be less than max"
         self.mw_pan.min_angle = pan_min
         self.mw_pan.max_angle = pan_max
         self.mw_tilt.min_angle = tilt_min
@@ -251,6 +253,10 @@ def command():
         elif op == "set_tilt":
             angle = req["angle"]
             success, message = robot.set_tilt(angle)
+        elif op == "update_motor_limits":
+            success, message = robot.update_motor_limits(
+                req["pan_min"], req["pan_max"], req["tilt_min"], req["tilt_max"]
+            )
         elif op == "play_sound":
             name = req["name"]
             success, message = robot.play_sound(name)
