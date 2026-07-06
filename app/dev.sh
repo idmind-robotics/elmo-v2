@@ -1,4 +1,4 @@
 #! /bin/bash
 
-./rebuild_ui.sh
-python3 app.py
+#./rebuild_ui.sh
+uv run src/uv app.py

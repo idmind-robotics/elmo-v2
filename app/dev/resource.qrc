@@ -1,7 +1,9 @@
 <RCC>
   <qresource prefix="res">
+    <!-- Uncomment when you have these files:
     <file>icons/control.png</file>
     <file>icons/control-pause.png</file>
     <file>icon.ico</file>
+    -->
   </qresource>
 </RCC>
