@@ -17,7 +17,9 @@ class Ui_MainWindow(object):
         MainWindow.resize(819, 720)
         MainWindow.setMinimumSize(QtCore.QSize(0, 0))
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(":/res/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(
+            QtGui.QPixmap(":/res/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off
+        )
         MainWindow.setWindowIcon(icon)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -450,7 +452,9 @@ class Ui_MainWindow(object):
         self.battery.setFont(font)
         self.battery.setObjectName("battery")
         self.horizontalLayout_2.addWidget(self.battery)
-        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem = QtWidgets.QSpacerItem(
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+        )
         self.horizontalLayout_2.addItem(spacerItem)
         self.camera = QtWidgets.QPushButton(self.centralwidget)
         font = QtGui.QFont()
@@ -576,7 +580,11 @@ class Ui_MainWindow(object):
         self.audio_play_sound.setFont(font)
         self.audio_play_sound.setText("")
         icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap(":/res/icons/control.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon1.addPixmap(
+            QtGui.QPixmap(":/res/icons/control.png"),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.Off,
+        )
         self.audio_play_sound.setIcon(icon1)
         self.audio_play_sound.setObjectName("audio_play_sound")
         self.gridLayout_16.addWidget(self.audio_play_sound, 0, 3, 1, 1)
@@ -593,7 +601,11 @@ class Ui_MainWindow(object):
         self.audio_pause.setFont(font)
         self.audio_pause.setText("")
         icon2 = QtGui.QIcon()
-        icon2.addPixmap(QtGui.QPixmap(":/res/icons/control-pause.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon2.addPixmap(
+            QtGui.QPixmap(":/res/icons/control-pause.png"),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.Off,
+        )
         self.audio_pause.setIcon(icon2)
         self.audio_pause.setObjectName("audio_pause")
         self.gridLayout_16.addWidget(self.audio_pause, 1, 3, 1, 1)
@@ -820,10 +832,14 @@ class Ui_MainWindow(object):
         self.gridLayout_7 = QtWidgets.QGridLayout(self.groupBox_3)
         self.gridLayout_7.setObjectName("gridLayout_7")
         self.behaviour_look_around = QtWidgets.QCheckBox(self.groupBox_3)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(1)
-        sizePolicy.setHeightForWidth(self.behaviour_look_around.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.behaviour_look_around.sizePolicy().hasHeightForWidth()
+        )
         self.behaviour_look_around.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
         font.setPointSize(9)
@@ -831,10 +847,14 @@ class Ui_MainWindow(object):
         self.behaviour_look_around.setObjectName("behaviour_look_around")
         self.gridLayout_7.addWidget(self.behaviour_look_around, 0, 0, 1, 1)
         self.behaviour_blush = QtWidgets.QCheckBox(self.groupBox_3)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(1)
-        sizePolicy.setHeightForWidth(self.behaviour_blush.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.behaviour_blush.sizePolicy().hasHeightForWidth()
+        )
         self.behaviour_blush.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
         font.setPointSize(9)
@@ -850,8 +870,16 @@ class Ui_MainWindow(object):
         self.gridLayout_8.addWidget(self.groupBox_3, 7, 4, 3, 4)
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
-        spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        spacerItem1 = QtWidgets.QSpacerItem(
+            20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding
+        )
         self.verticalLayout.addItem(spacerItem1)
+        self.reboot = QtWidgets.QPushButton(self.centralwidget)
+        font = QtGui.QFont()
+        font.setPointSize(9)
+        self.reboot.setFont(font)
+        self.reboot.setObjectName("reboot")
+        self.verticalLayout.addWidget(self.reboot)
         self.shutdown = QtWidgets.QPushButton(self.centralwidget)
         font = QtGui.QFont()
         font.setPointSize(9)
@@ -865,12 +893,12 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.status_bar)
 
         self.retranslateUi(MainWindow)
-        self.leds_b.valueChanged['int'].connect(self.label_9.setNum) # type: ignore
-        self.leds_r.valueChanged['int'].connect(self.label_7.setNum) # type: ignore
-        self.leds_g.valueChanged['int'].connect(self.label_8.setNum) # type: ignore
-        self.motors_tilt.valueChanged['int'].connect(self.label_13.setNum) # type: ignore
-        self.motors_pan.valueChanged['int'].connect(self.label_10.setNum) # type: ignore
-        self.audio_volume.valueChanged['int'].connect(self.label_43.setNum) # type: ignore
+        self.leds_b.valueChanged["int"].connect(self.label_9.setNum)  # type: ignore
+        self.leds_r.valueChanged["int"].connect(self.label_7.setNum)  # type: ignore
+        self.leds_g.valueChanged["int"].connect(self.label_8.setNum)  # type: ignore
+        self.motors_tilt.valueChanged["int"].connect(self.label_13.setNum)  # type: ignore
+        self.motors_pan.valueChanged["int"].connect(self.label_10.setNum)  # type: ignore
+        self.audio_volume.valueChanged["int"].connect(self.label_43.setNum)  # type: ignore
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -946,9 +974,9 @@ class Ui_MainWindow(object):
         self.groupBox_7.setTitle(_translate("MainWindow", "Motor Limits"))
         self.label_30.setText(_translate("MainWindow", "Min"))
         self.label_31.setText(_translate("MainWindow", "Max"))
-        self.motors_update_limits.setText(_translate("MainWindow", "Update\n"
-"Motor\n"
-"Limits"))
+        self.motors_update_limits.setText(
+            _translate("MainWindow", "Update\nMotor\nLimits")
+        )
         self.groupBox_5.setTitle(_translate("MainWindow", "Touch Sensors"))
         self.label_16.setText(_translate("MainWindow", "Chest"))
         self.touch_chest_value.setText(_translate("MainWindow", "0"))
@@ -967,5 +995,5 @@ class Ui_MainWindow(object):
         self.behaviour_blush.setText(_translate("MainWindow", "Blush"))
         self.behaviour_conversation.setText(_translate("MainWindow", "Conversation"))
         self.behaviour_photographer.setText(_translate("MainWindow", "Photographer"))
+        self.reboot.setText(_translate("MainWindow", "Reboot"))
         self.shutdown.setText(_translate("MainWindow", "Shutdown"))
-import resource_rc
