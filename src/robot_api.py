@@ -295,7 +295,7 @@ def quick_connect():
     mw_server = mw.Server()
     udp_ip = "0.0.0.0"
     udp_port = mw_server.udp_port
-    response_str = "iamarobot;elmo;%s;%d" % (mw_robot.name, mw_server.api_port)
+    response_str = "iamarobot;tagi;%s;%d" % (mw_robot.name, mw_server.api_port)
     response = response_str.encode()
 
     running = False
