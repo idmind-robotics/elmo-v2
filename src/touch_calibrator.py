@@ -1,5 +1,7 @@
 """
 
+Tool node.
+
 Touch sensor calibration.
 
 This module calculates if a touch event has occurred, based on the raw values of the touch sensors.
@@ -26,7 +28,30 @@ SENSITIVITY = 5
 
 
 class TouchCalibrator:
+    """
+    Driver class for touch sensor calibration and touch detection.
+
+    Maintains rolling windows for each touch sensor and calculates
+    touch events based on moving averages and sensitivity thresholds.
+
+    > ## Attributes
+
+    ``windows : dict`` : Rolling buffers containing recent raw sensor values.
+
+    ``touch_sensors : mw.TouchSensors`` : Middleware touch sensor interface.
+
+    ``node : mw.Node`` : Middleware node used for logging and shutdown handling.
+
+    > ## Functions
+    """
     def __init__(self):
+        """
+        Initialize touch calibration buffers and middleware interfaces.
+
+        Returns
+        -------
+        None
+        """
         self.windows = {
             "chest": [],
             "head_0": [],
@@ -39,6 +64,20 @@ class TouchCalibrator:
         self.node = mw.Node("touch_calibrator")
 
     def run(self):
+        """
+        Run the touch calibration and touch detection loop.
+
+        The method:
+        - Waits for touch sensors to become ready.
+        - Performs initial calibration.
+        - Continuously updates moving averages.
+        - Detects touch events.
+        - Updates middleware touch states.
+
+        Returns
+        -------
+        None
+        """
         try:
             self.node.loginfo("waiting for touch sensors to be ready")
             while not self.node.is_shutdown():

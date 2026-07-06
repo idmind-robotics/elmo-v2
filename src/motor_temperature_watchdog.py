@@ -12,10 +12,25 @@ import middleware as mw
 
 
 class MotorTemperatureWatchdog:
+    """
+    Middleware watchdog that monitors motor temperatures and disables look_around behaviour on overheating.
+
+    > ## Attributes
+
+    ``node : mw.Node`` : Middleware node used for shutdown and logging.
+
+    ``behaviours : mw.Behaviours`` : Middleware behaviour configuration flags.
+
+    ``pan : mw.Pan`` : Middleware pan motor controller with temperature readings.
+
+    ``tilt : mw.Tilt`` : Middleware tilt motor controller with temperature readings.
+
+    > ## Functions
+    """
+
     def __init__(self):
         """
-        Connect to middleware.
-        Initialize node.
+        Initialize middleware objects and watchdog node.
         """
         self.node = mw.Node("motor_temperature_watchdog")
         self.behaviours = mw.Behaviours()
@@ -24,7 +39,17 @@ class MotorTemperatureWatchdog:
 
     def run(self):
         """
-        Main loop.
+        Main watchdog loop.
+
+        Behavior
+        --------
+        - Waits for pan and tilt motors to be ready.
+        - Monitors motor temperatures every second.
+        - Disables look_around behaviour when either motor exceeds hot threshold.
+        - Re-enables look_around behaviour when both motors cool below cool threshold.
+        - Remembers whether look_around was enabled before overheating to restore state.
+        - Logs temperature warnings and behaviour state changes.
+        - Always shuts down node in finally block.
         """
         was_hot = False
         was_cool = True

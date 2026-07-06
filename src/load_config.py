@@ -1,6 +1,11 @@
 """
 
-Load initial middleware keys and values into redis.
+Tool node.
+
+Load initial middleware keys and values into Redis.
+
+This module loads the default configuration from the initial configuration
+file and optionally loads a custom robot configuration file.
 
 """
 

@@ -1,3 +1,15 @@
+"""
+
+Driver node.
+
+MJPEG streaming server for Picamera2.
+
+This module captures frames from the Raspberry Pi camera and streams them
+through an MJPEG HTTP endpoint.
+
+"""
+
+
 import io
 import logging
 import socketserver
@@ -23,19 +35,70 @@ PAGE = """\
 
 
 class StreamingOutput(io.BufferedIOBase):
+    """
+    Buffered output stream used to store camera frames.
+
+    Receives MJPEG encoded frames from Picamera2 and makes them available
+    to HTTP streaming clients.
+
+    > ## Attributes
+
+    ``frame : bytes`` : Latest encoded MJPEG frame.
+
+    ``condition : threading.Condition`` : Synchronization primitive used to notify waiting clients.
+
+    > ## Functions
+    """
     def __init__(self):
+        """
+        Initialize the streaming output buffer.
+
+        Returns
+        -------
+        None
+        """
         super().__init__()
         self.frame = None
         self.condition = Condition()
 
     def write(self, buf):
+        """
+        Store a new MJPEG frame and notify waiting clients.
+
+        Parameters
+        ----------
+        buf : bytes
+            Encoded JPEG frame buffer.
+
+        Returns
+        -------
+        None
+        """
         with self.condition:
             self.frame = buf
             self.condition.notify_all()
 
 
 class StreamingHandler(server.BaseHTTPRequestHandler):
+    """
+    HTTP request handler for MJPEG video streaming.
+
+    Handles requests for the index page and MJPEG stream endpoint.
+
+    > ## Functions
+    """
     def do_GET(self):
+        """
+        Handle HTTP GET requests.
+
+        Supported endpoints:
+        - / or /index.html : Stream webpage.
+        - /stream.mjpg : MJPEG video stream.
+
+        Returns
+        -------
+        None
+        """
         if self.path in ("/", "/index.html"):
             content = PAGE.encode("utf-8")
             self.send_response(200)
@@ -79,6 +142,17 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
 
 class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
+    """
+    Multithreaded HTTP server for MJPEG streaming.
+
+    Supports concurrent streaming clients.
+
+    > ## Attributes
+
+    ``allow_reuse_address : bool`` : Allow immediate socket reuse.
+
+    ``daemon_threads : bool`` : Run request threads as daemon threads.
+    """
     allow_reuse_address = True
     daemon_threads = True
 
