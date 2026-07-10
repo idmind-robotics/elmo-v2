@@ -61,8 +61,7 @@ class DriverSpeakers:
         Behavior
         --------
         - Fetches audio file via curl.
-        - Applies volume control via sox (converts 0-99 to 0.0-1.0 scale).
-        - Plays through aplay targeting hardware device plughw:2,0.
+        - Plays through pw-play, passing volume (0.0-1.0) directly via --volume.
         - Logs any stderr output from subprocess commands.
         - Clears middleware URL and playing fields when complete.
 
@@ -74,31 +73,23 @@ class DriverSpeakers:
         self.speakers.playing = url
         self.node.loginfo(f"Playing {url}")
         try:
-            # convert volume 0-99 to 0.0-1.0 for sox
             vol = max(0.0, min(1.0, self.speakers.volume / 99.0))
             self.curl_process = subprocess.Popen(
                 ["/usr/bin/curl", "-s", url],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
             )
-            self.sox_process = subprocess.Popen(
-                ["sox", "-t", "wav", "-", "-t", "wav", "-", "vol", str(vol)],
-                stdin=self.curl_process.stdout,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
             self.playback_process = subprocess.Popen(
-                ["aplay", "-D", "plughw:2,0"],
-                stdin=self.sox_process.stdout,
+                ["pw-play", f"--volume={vol}", "-"],
+                stdin=self.curl_process.stdout,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.PIPE,
             )
             self.curl_process.stdout.close()
-            self.sox_process.stdout.close()
             self.playback_process.wait()
 
             if stderr := self.playback_process.stderr.read():
-                self.node.logerror(f"aplay: {stderr.decode().strip()}")
+                self.node.logerror(f"pw-play: {stderr.decode().strip()}")
             if stderr := self.curl_process.stderr.read():
                 self.node.logerror(f"curl: {stderr.decode().strip()}")
         except OSError as e:
@@ -113,18 +104,16 @@ class DriverSpeakers:
 
         Behavior
         --------
-        - Terminates all active subprocesses (aplay, sox, curl).
-        - Kills any remaining aplay or curl processes via pkill.
+        - Terminates all active subprocesses (pw-play, curl).
+        - Kills any remaining pw-play or curl processes via pkill.
         - Clears middleware playing field.
         """
         print("stopping")
         if self.playback_process and self.playback_process.poll() is None:
             self.playback_process.terminate()
-        if self.sox_process and self.sox_process.poll() is None:
-            self.sox_process.terminate()
         if self.curl_process and self.curl_process.poll() is None:
             self.curl_process.terminate()
-        subprocess.run(["pkill", "-f", "aplay.*Lite"], capture_output=True)
+        subprocess.run(["pkill", "-f", "pw-play"], capture_output=True)
         subprocess.run(["pkill", "-f", "curl.*sounds"], capture_output=True)
         self.speakers.playing = None
 
