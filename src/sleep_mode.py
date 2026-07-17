@@ -22,9 +22,9 @@ EYES_OPENED = 1
 EYES_CLOSED = 2
 
 VIDEO_DURATIONS = {
-    "open_dark.mp4": 2.0,
-    "dark_open.mp4": 2.0,
-    "dark_squint_dark.mp4": 7.0,
+    "open_dark.webm": 2.0,
+    "dark_open.webm": 2.0,
+    "dark_squint_dark.webm": 7.0,
 }
 
 
@@ -80,7 +80,7 @@ class SleepMode:
 
         self.video_urls = {
             f: self.server.url_for_video(f)
-            for f in ["open_dark.mp4", "dark_open.mp4", "dark_squint_dark.mp4"]
+            for f in ["open_dark.webm", "dark_open.webm", "dark_squint_dark.webm"]
         }
 
         self.sleep.last_activity = time.time()
@@ -195,7 +195,7 @@ class SleepMode:
         Parameters
         ----------
         filename : str
-            Video filename (e.g. "dark_open.mp4").
+            Video filename (e.g. "dark_open.webm").
         then_image_url : str, optional
             Static image URL to restore after playback. Defaults to normal.png.
             Only used when restore=True.
@@ -224,7 +224,7 @@ class SleepMode:
         """
         Transition from open eyes to fully dark screen.
 
-        Plays open_dark.mp4 for a smooth animation. restore=False because
+        Plays open_dark.webm for a smooth animation. restore=False because
         the video already ends on the dark frame — forcing display.image
         mid-playback would interrupt the video and cause a visual artifact.
         Publishes EYES_CLOSED to the semaphore.
@@ -232,7 +232,7 @@ class SleepMode:
         """
         if self.sleep.sleeping:
             return
-        self.play_video("open_dark.mp4", restore=False)
+        self.play_video("open_dark.webm", restore=False)
         self.sleep.sleeping = True
         self.current_state = "dark"
         self.sleep.eye_state = EYES_CLOSED
@@ -241,11 +241,11 @@ class SleepMode:
         """
         Wake from dark to open eyes.
 
-        Plays dark_open.mp4 then restores the open static image.
+        Plays dark_open.webm then restores the open static image.
         Publishes EYES_OPENED and resets the activity timer.
         """
         self.play_video(
-            "dark_open.mp4", then_image_url=self.server.url_for_image("normal.png")
+            "dark_open.webm", then_image_url=self.server.url_for_image("normal.png")
         )
         self.sleep.sleeping = False
         self.current_state = "open"
@@ -267,12 +267,12 @@ class SleepMode:
         if self.is_behaviour_active():
             return
         self.playing_video = True
-        self.display.video = self.video_urls["dark_squint_dark.mp4"]
+        self.display.video = self.video_urls["dark_squint_dark.webm"]
         if hasattr(self.display, "video_playing"):
             while self.display.video_playing:
                 time.sleep(0.05)
         else:
-            time.sleep(VIDEO_DURATIONS["dark_squint_dark.mp4"])
+            time.sleep(VIDEO_DURATIONS["dark_squint_dark.webm"])
         if not self.is_behaviour_active():
             self.display.image = self.server.url_for_image("background_black.png")
         self.playing_video = False
