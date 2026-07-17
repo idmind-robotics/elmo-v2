@@ -77,6 +77,7 @@ class SleepMode:
         self.server = mw.Server()
         self.mode_manager = ModeManager()
         self.sleep = mw.Sleep()
+        self.node = mw.Node()
 
         self.video_urls = {
             f: self.server.url_for_video(f)
@@ -135,6 +136,7 @@ class SleepMode:
                     self.sleep.last_activity = t
                     self.wake_event.set()
             except TypeError:
+                self.node.loginfo("Invalid slee.last_interaction value.")
                 pass
             time.sleep(0.2)
 
