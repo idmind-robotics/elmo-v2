@@ -136,6 +136,19 @@ class DBEntry:
         return do_set
 
 
+class Sleep(DBEntry):
+    prefix = "sleep"
+    fields = {
+        "ready": False,
+        "enabled": True,
+        "sleeping": False,
+        "eye_state": 1,
+        "last_activity": time.time(),
+        "last_interaction": 0.0,
+        "timeout": 300,
+    }
+
+
 class Robot(DBEntry):
     prefix = "robot"
     fields = {
